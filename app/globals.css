@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.12 0.01 240);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.16 0.01 240);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.14 0.01 240);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.72 0.19 142);
+  --primary-foreground: oklch(0.12 0.01 240);
+  --secondary: oklch(0.22 0.01 240);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.22 0.01 240);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.72 0.19 142);
+  --accent-foreground: oklch(0.12 0.01 240);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.28 0.01 240);
+  --input: oklch(0.22 0.01 240);
+  --ring: oklch(0.72 0.19 142);
+  --chart-1: oklch(0.72 0.19 142);
+  --chart-2: oklch(0.65 0.15 180);
+  --chart-3: oklch(0.55 0.12 220);
+  --chart-4: oklch(0.75 0.14 85);
+  --chart-5: oklch(0.60 0.20 30);
+  --radius: 0.75rem;
+  --success: oklch(0.72 0.19 142);
+  --warning: oklch(0.80 0.16 85);
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Safe area for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-area-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+}
+
+/* Scanner overlay animations */
+@keyframes scan-line {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(100%); }
+}
+
+.animate-scan {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* AR bounding box pulse */
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--primary); opacity: 1; }
+  50% { border-color: var(--primary); opacity: 0.5; }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+/* Drawer handle */
+.drawer-handle {
+  width: 48px;
+  height: 5px;
+  background: var(--muted-foreground);
+  border-radius: 3px;
+  opacity: 0.4;
+}
