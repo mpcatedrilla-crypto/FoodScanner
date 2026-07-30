@@ -1,0 +1,32 @@
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+
+# Environment variables
+.env*.local
+.env
+
+# Common ignores
+node_modules/
+.next/
+.DS_Store
+
+# Mobile / React Native
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/app/.cxx/
+mobile/.expo/
+mobile/node_modules/
+
+# Python / AI / Backend
+sam2_venv/
+backend/__pycache__/
+*.pyc
+
+# 3rd Party Repositories
+sam2/
+label-studio-ml-backend/
