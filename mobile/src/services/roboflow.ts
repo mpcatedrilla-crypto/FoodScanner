@@ -11,8 +11,8 @@
  */
 
 // ─── Configuration ───────────────────────────────────────────────────────────
-// We are now pointing to the custom local Python backend!
-export const CUSTOM_API_URL = 'http://192.168.18.130:8000/predict'; 
+// We are now pointing to the permanent public ngrok URL!
+export const CUSTOM_API_URL = 'https://catlike-calzone-isotope.ngrok-free.dev/predict'; 
 
 const CONFIDENCE = 40;   // minimum confidence % (0–100)
 const OVERLAP    = 30;   // max bounding-box overlap % for NMS
@@ -53,7 +53,10 @@ export type RoboflowResponse = {
 export async function detectIngredients(base64Image: string): Promise<RoboflowResponse> {
   const response = await fetch(CUSTOM_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true' // Required to bypass free ngrok warning page for API calls
+    },
     body: JSON.stringify({
       base64_image: base64Image
     }),
