@@ -8,7 +8,7 @@ import { RecipeCardRow } from '../components/RecipeCardRow';
 import type { Recipe } from '../lib/types';
 
 export default function RecipesScreen() {
-  const { category } = useLocalSearchParams<{ category: string }>();
+  const { category, title } = useLocalSearchParams<{ category: string, title?: string }>();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +33,9 @@ export default function RecipesScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <ArrowLeft size={24} color="#0fa958" />
         </TouchableOpacity>
-        <Text className="text-white text-xl font-extrabold uppercase tracking-widest">
-          {category ? `${category.replace('|', '/').toUpperCase()}` : 'ALL RECIPES'}
-        </Text>
+          <Text className="text-white text-xl font-extrabold uppercase tracking-widest">
+            {title ? title.toUpperCase() : (category ? `${category.replace('|', '/').toUpperCase()}` : 'ALL RECIPES')}
+          </Text>
       </View>
 
       {loading ? (

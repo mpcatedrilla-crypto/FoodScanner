@@ -55,8 +55,6 @@ export default function SavedScreen() {
             <RecipeCardRow 
               recipe={item}
               dateText="Saved"
-              isBookmarked={true}
-              onBookmarkPress={() => toggleBookmark(item.id)}
               showTrash={true}
               onTrashPress={() => toggleBookmark(item.id)}
               onPress={() => router.push(`/recipe/${item.id}?from=saved`)}

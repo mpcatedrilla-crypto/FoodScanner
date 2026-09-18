@@ -97,7 +97,7 @@ export default function HomeScreen() {
               <TouchableOpacity 
                 key={cat.name}
                 className="w-[100px] h-[110px] rounded-2xl mr-4 overflow-hidden relative items-center justify-end pb-3 border border-white/10"
-                onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}`)}
+                onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
               >
                 <LinearGradient
                   colors={cat.color as [string, string]}
@@ -133,7 +133,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity 
               className="flex-row items-center p-4 border-b border-white/5"
-              onPress={() => router.push(`/recipes?category=${encodeURIComponent('vegetable|gourd|eggplant|squash')}`)}
+              onPress={() => router.push(`/recipes?category=${encodeURIComponent('vegetable|gourd|eggplant|squash')}&title=Vegetables`)}
             >
               <View className="w-10 h-10 rounded-full bg-white/5 items-center justify-center mr-4">
                 <Leaf size={20} color="#a1a1aa" />
