@@ -18,17 +18,22 @@ This system is designed around three core theoretical frameworks:
 ### 1. Home Screen (Category Selection)
 *Shows the clean UI and distinctive categories.*
 
-![DRAG_AND_DROP_HOME_SCREEN_IMAGE_HERE]()
+<img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/79afe613-2084-4268-96cb-814d785c423c" />
+
 
 ### 2. Live YOLOv8 Camera Scanner
 *Shows the VisionCamera drawing bounding boxes around detected ingredients.*
 
-![DRAG_AND_DROP_CAMERA_SCANNER_IMAGE_HERE]()
+<img width="922" height="2048" alt="image" src="https://github.com/user-attachments/assets/2451607f-5ed9-4764-85a4-c375cb4baa81" />
+
 
 ### 3. Detected Ingredients & Nutritional Summary (Germane Load)
 *Shows the extracted ingredients alongside the dynamic Protein/Carbs/Fat macronutrient breakdown.*
 
-![DRAG_AND_DROP_NUTRITION_SUMMARY_IMAGE_HERE]()
+<img width="922" height="2048" alt="image" src="https://github.com/user-attachments/assets/537fa15f-3528-4cc6-9808-1e022c1e9ee0" />
+
+<img width="922" height="2048" alt="image" src="https://github.com/user-attachments/assets/6901f653-a228-4023-9b13-ae16497c6c3b" />
+
 
 ### 4. Recipe Match Results
 *Shows how the app ranks recipes by prioritizing distinctive ingredients and filtering out ubiquitous ones.*
@@ -38,7 +43,9 @@ This system is designed around three core theoretical frameworks:
 ### 5. Cook Mode (Parallel Processing)
 *Shows the step-by-step instructions and the interactive countdown timer that triggers local push notifications/vibrations.*
 
-![DRAG_AND_DROP_COOK_MODE_TIMER_IMAGE_HERE]()
+<img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/f72d64e6-f390-4d84-9f08-b21ac527c489" />
+
+<img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/90a661b1-1c55-4ad0-8ebc-f3a3c79030fd" />
 
 ---
 
