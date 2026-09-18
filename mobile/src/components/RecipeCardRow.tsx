@@ -23,8 +23,8 @@ export function RecipeCardRow({
   onTrashPress,
   onPress
 }: RecipeCardRowProps) {
-  const { bookmarks, toggleBookmark } = useBookmarks();
-  const isBookmarked = bookmarks.includes(recipe.id);
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
+  const isBookmarked = bookmarkedIds.includes(recipe.id);
 
   return (
     <TouchableOpacity 
