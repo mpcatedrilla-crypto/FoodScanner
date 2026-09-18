@@ -1,27 +1,113 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, BackHandler } from 'react-native';
+import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, Users, Flame, ChefHat, Check, ShoppingCart, Heart } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, ChefHat, Play, Pause, TimerReset } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
-import { getRecipeById } from '../../lib/actions';
+import { getRecipeById, addRecipeHistory } from '../../lib/actions';
 import type { RecipeWithIngredients } from '../../lib/types';
 import { useBookmarks } from '../../lib/bookmark-context';
+import { useAuth } from '../../lib/auth-context';
 
-export default function RecipePage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+function TimerBox({ minutes }: { minutes: number }) {
+  const [timeLeft, setTimeLeft] = useState(minutes * 60);
+  const [isActive, setIsActive] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isActive && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      if (isActive) {
+        setIsActive(false);
+        Alert.alert("Time's up!", "Your step is complete.");
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isActive, timeLeft]);
+
+  const toggleTimer = () => setIsActive(!isActive);
+  const resetTimer = () => {
+    setIsActive(false);
+    setTimeLeft(minutes * 60);
+  };
+
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const timeString = `00:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+  return (
+    <View className="flex-row items-center justify-between border-t border-white/10 pt-4 mt-4">
+      <View className="flex-row items-center">
+        <Clock size={24} color={isActive ? "#0fa958" : "#71717a"} />
+        <View className="ml-3">
+          <Text className="text-gray-400 text-xs">Timer</Text>
+          <Text className="text-white text-lg font-bold font-mono tracking-widest">{timeString}</Text>
+          <Text className="text-gray-500 text-[10px]">({minutes} minutes)</Text>
+        </View>
+      </View>
+      
+      <View className="flex-row space-x-2">
+        {timeLeft < minutes * 60 && !isActive && (
+          <TouchableOpacity onPress={resetTimer} className="bg-gray-800 p-3 rounded-full items-center justify-center">
+            <TimerReset size={16} color="white" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity 
+          onPress={toggleTimer} 
+          className={`flex-row items-center px-6 py-3 rounded-full ${isActive ? 'bg-amber-500' : 'bg-[#0fa958]'}`}
+        >
+          {isActive ? <Pause size={16} color="white" fill="white" /> : <Play size={16} color="white" fill="white" />}
+          <Text className="text-white font-bold ml-2">{isActive ? 'Pause' : 'Start'}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function CookModeScreen() {
+  const { id, from } = useLocalSearchParams<{ id: string, from?: string }>();
+  const { session } = useAuth();
+
+  const handleBack = () => {
+    if (from) {
+      router.navigate(`/${from}`);
+    } else {
+      router.navigate('/');
+    }
+    return true;
+  };
+
+  const handleComplete = async () => {
+    if (session?.user && id) {
+      await addRecipeHistory(session.user.id, id as string);
+    }
+    setActiveStep(1);
+    handleBack();
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
+      return () => sub.remove();
+    }, [from])
+  );
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Interactive Cooking State
-  const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
-  const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({});
-  
-  // Bookmarks
-  const { isBookmarked, toggleBookmark } = useBookmarks();
-  const saved = id ? isBookmarked(id) : false;
+  const [activeStep, setActiveStep] = useState(1);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      setActiveStep(1);
+    }, [id])
+  );
+  
   useEffect(() => {
     if (id) {
       getRecipeById(id).then(data => {
@@ -33,7 +119,7 @@ export default function RecipePage() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background justify-center items-center">
+      <View className="flex-1 bg-[#09090b] justify-center items-center">
         <ActivityIndicator size="large" color="#0fa958" />
       </View>
     );
@@ -41,188 +127,152 @@ export default function RecipePage() {
 
   if (!recipe) {
     return (
-      <View className="flex-1 bg-background justify-center items-center px-6">
-        <Text className="text-foreground text-lg mb-4">Recipe not found</Text>
-        <TouchableOpacity 
-          className="px-6 py-3 bg-[#0fa958] rounded-full"
-          onPress={() => router.back()}
-        >
+      <View className="flex-1 bg-[#09090b] justify-center items-center px-6">
+        <Text className="text-white text-lg mb-4">Recipe not found</Text>
+        <TouchableOpacity className="px-6 py-3 bg-[#0fa958] rounded-full" onPress={() => handleBack()}>
           <Text className="text-white font-bold">Go Back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const instructions = recipe.instructions || [];
-  const ingredients = recipe.recipe_ingredients || [];
-
-  const toggleIngredient = (ingId: string) => {
-    setCheckedIngredients(prev => ({ ...prev, [ingId]: !prev[ingId] }));
-  };
-
-  const toggleStep = (stepNum: number) => {
-    setCheckedSteps(prev => ({ ...prev, [stepNum]: !prev[stepNum] }));
-  };
+  // Parse instructions with fallback for old format
+  const steps = (recipe.instructions || []).map((s: any) => {
+    // If the db update hasn't propagated, we fallback
+    let title = s.title;
+    if (!title) {
+      title = s.text.split('.')[0];
+    }
+    let timer = s.timer_minutes;
+    if (!timer) {
+      const match = s.text.match(/(\d+)\s*min/i) || s.text.match(/(\d+)\s*to\s*\d+\s*min/i);
+      if (match) timer = parseInt(match[1], 10);
+    }
+    return { ...s, title, timer_minutes: timer };
+  });
 
   return (
-    <View className="flex-1 bg-background">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Hero section */}
-        <View className="relative h-72 bg-secondary">
-          {recipe.image_url ? (
-            <Image 
-              source={recipe.image_url} 
-              className="absolute inset-0 w-full h-full"
-              contentFit="cover"
-            />
-          ) : (
-            <View className="absolute inset-0 items-center justify-center">
-              <ChefHat size={96} className="text-muted-foreground/30" />
-            </View>
-          )}
-          {/* Gradient Overlay for back button visibility */}
-          <View className="absolute inset-0 bg-black/20" />
-
-          <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0 z-10 px-4 pt-4 flex-row justify-between items-center">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center backdrop-blur-md"
-            >
-              <ArrowLeft size={20} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => toggleBookmark(id!)}
-              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center backdrop-blur-md"
-            >
-              <Heart size={20} color={saved ? "#0fa958" : "white"} fill={saved ? "#0fa958" : "transparent"} />
-            </TouchableOpacity>
-          </SafeAreaView>
+    <SafeAreaView edges={['top']} className="flex-1 bg-[#09090b]">
+      {/* Header */}
+      <View className="flex-row items-center px-6 py-4">
+        <TouchableOpacity onPress={() => handleBack()} className="w-10 h-10 bg-[#1c1c1e] rounded-full items-center justify-center mr-4">
+          <ArrowLeft size={20} color="white" />
+        </TouchableOpacity>
+        <View>
+          <Text className="text-white text-xl font-bold">Cook Mode</Text>
+          <Text className="text-gray-400 text-xs">Follow the steps and cook with confidence</Text>
         </View>
+      </View>
 
-        {/* Content */}
-        <View className="px-6 -mt-8 relative z-10">
-          {/* Title card */}
-          <View className="bg-card rounded-3xl p-6 shadow-xl shadow-black/5 border border-border/40">
-            <Text className="text-2xl font-bold text-foreground">{recipe.name}</Text>
-            {recipe.name_tagalog && (
-              <Text className="text-muted-foreground mt-1 text-sm">{recipe.name_tagalog}</Text>
-            )}
-            
-            {recipe.description && (
-              <Text className="text-foreground/80 mt-3 text-sm leading-relaxed">
-                {recipe.description}
-              </Text>
-            )}
-
-            {/* Meta badges */}
-            <View className="flex-row flex-wrap gap-3 mt-5">
-              {recipe.cooking_time_minutes && (
-                <View className="flex-row items-center gap-2 bg-[#e6f4ea] px-3 py-2 rounded-lg">
-                  <Clock size={16} color="#0fa958" />
-                  <Text className="text-sm font-medium text-[#0fa958]">{recipe.cooking_time_minutes} min</Text>
-                </View>
-              )}
-              {recipe.servings && (
-                <View className="flex-row items-center gap-2 bg-[#e6f4ea] px-3 py-2 rounded-lg">
-                  <Users size={16} color="#0fa958" />
-                  <Text className="text-sm font-medium text-[#0fa958]">{recipe.servings} portions</Text>
-                </View>
-              )}
-              {recipe.difficulty && (
-                <View className="flex-row items-center gap-2 bg-[#e6f4ea] px-3 py-2 rounded-lg">
-                  <Flame size={16} color="#0fa958" />
-                  <Text className="text-sm font-medium text-[#0fa958] capitalize">{recipe.difficulty}</Text>
-                </View>
-              )}
+      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+        {/* Recipe Hero Card */}
+        <View className="bg-[#1c1c1e] rounded-3xl overflow-hidden mb-6 border border-white/5 pb-5">
+          <View className="relative h-48 w-full">
+            <Image 
+              source={{ uri: recipe.image_url || 'https://placehold.co/600x400/0fa958/ffffff.png' }} 
+              style={{ width: '100%', height: '100%', opacity: 0.8 }} 
+              contentFit="cover" 
+            />
+            <View className="absolute top-4 left-4 bg-black/60 rounded-full px-3 py-1.5 flex-row items-center border border-white/10">
+              <ChefHat size={12} color="white" className="mr-1.5" />
+              <Text className="text-white text-xs font-medium">Filipino Recipe</Text>
             </View>
+            <View className="absolute top-4 right-4 bg-black/60 rounded-full px-3 py-1.5 border border-white/10">
+              <Text className="text-white text-xs font-medium">1 / {steps.length}</Text>
+            </View>
+            {/* Gradient overlay at bottom of image */}
+            <View className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-[#1c1c1e] to-transparent" />
           </View>
-
-          {/* Interactive Ingredients */}
-          <View className="mt-8">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-bold text-foreground">Ingredients</Text>
-              <Text className="text-sm text-muted-foreground font-medium">{ingredients.length} items</Text>
-            </View>
+          
+          <View className="px-5 -mt-6">
+            <Text className="text-white text-2xl font-bold mb-2 shadow-sm">{recipe.name}</Text>
+            <Text className="text-gray-300 text-sm leading-relaxed mb-5">
+              {recipe.description || 'A classic Filipino dish with tender ingredients in a savory, tangy sauce.'}
+            </Text>
             
-            <View className="bg-card rounded-2xl overflow-hidden border border-border/40">
-              {ingredients.map((ri, index) => {
-                const isChecked = checkedIngredients[ri.id];
-                return (
-                  <TouchableOpacity
-                    key={ri.id}
-                    onPress={() => toggleIngredient(ri.id)}
-                    activeOpacity={0.7}
-                    className={`flex-row items-center justify-between p-4 ${
-                      index < ingredients.length - 1 ? 'border-b border-border/50' : ''
-                    } ${isChecked ? 'bg-secondary/30' : ''}`}
-                  >
-                    <View className="flex-row items-center gap-3 flex-1">
-                      <View className={`w-6 h-6 rounded-md border items-center justify-center ${
-                        isChecked ? 'bg-[#0fa958] border-[#0fa958]' : 'border-muted-foreground/50'
-                      }`}>
-                        {isChecked && <Check size={14} color="white" />}
-                      </View>
-                      <View className="flex-1 pr-2">
-                        <Text className={`font-medium ${isChecked ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                          {ri.ingredient?.name}
-                        </Text>
-                        {ri.ingredient?.name_tagalog && (
-                          <Text className={`text-xs ${isChecked ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
-                            {ri.ingredient.name_tagalog}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <Text className={`text-sm font-medium ${isChecked ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                      {ri.amount} {ri.unit}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Interactive Instructions */}
-          {instructions.length > 0 && (
-            <View className="mt-8">
-              <Text className="text-xl font-bold text-foreground mb-4">Instructions</Text>
-              <View className="gap-4">
-                {instructions.map((step, index) => {
-                  const isChecked = checkedSteps[step.step];
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => toggleStep(step.step)}
-                      activeOpacity={0.8}
-                      className={`flex-row gap-4 bg-card border border-border/40 rounded-2xl p-5 shadow-sm shadow-black/5 ${
-                        isChecked ? 'opacity-60 bg-secondary/20' : ''
-                      }`}
-                    >
-                      <View className={`w-8 h-8 rounded-full items-center justify-center flex-shrink-0 ${
-                        isChecked ? 'bg-[#0fa958]' : 'bg-primary/10'
-                      }`}>
-                        {isChecked ? (
-                          <Check size={16} color="white" />
-                        ) : (
-                          <Text className="text-[#0fa958] font-bold text-sm">
-                            {step.step}
-                          </Text>
-                        )}
-                      </View>
-                      <Text className={`text-foreground leading-relaxed flex-1 mt-1 text-[15px] ${
-                        isChecked ? 'line-through text-muted-foreground' : ''
-                      }`}>
-                        {step.text}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+            <View className="flex-row items-center justify-between border-t border-white/10 pt-4">
+              <View className="flex-row items-center">
+                <Clock size={14} color="#71717a" className="mr-1.5" />
+                <Text className="text-gray-300 text-xs font-medium">Prep: 15 mins</Text>
+              </View>
+              <View className="w-[1px] h-4 bg-white/10" />
+              <View className="flex-row items-center">
+                <ChefHat size={14} color="#71717a" className="mr-1.5" />
+                <Text className="text-gray-300 text-xs font-medium">Cook: {recipe.cooking_time_minutes || 30} mins</Text>
+              </View>
+              <View className="w-[1px] h-4 bg-white/10" />
+              <View className="flex-row items-center">
+                <Users size={14} color="#71717a" className="mr-1.5" />
+                <Text className="text-gray-300 text-xs font-medium">Serves: {recipe.servings || 4}</Text>
               </View>
             </View>
-          )}
+          </View>
+        </View>
+
+        <View className="flex-row justify-between items-end mb-4 px-2">
+          <Text className="text-white text-xl font-bold">Cooking Steps</Text>
+          <Text className="text-[#0fa958] text-xs font-medium">Swipe to navigate &lt; &gt;</Text>
+        </View>
+
+        {/* Steps List */}
+        <View className="pb-10">
+          {steps.map((step: any, index: number) => {
+            const isActive = activeStep === step.step;
+            const isCompleted = step.step < activeStep;
+            
+            return (
+              <TouchableOpacity 
+                key={step.step}
+                activeOpacity={0.9}
+                onPress={() => setActiveStep(step.step)}
+                className={`mb-4 rounded-3xl p-5 border ${isActive ? 'bg-[#1c1c1e] border-white/10 shadow-lg' : 'bg-[#09090b] border-white/5 opacity-60'}`}
+              >
+                <View className="flex-row mb-4">
+                  <View className={`w-10 h-10 rounded-full items-center justify-center mr-4 mt-1 ${isActive ? 'bg-[#0fa958]' : 'bg-gray-800'}`}>
+                    {isCompleted ? (
+                      <Text className="text-white font-bold">✓</Text>
+                    ) : (
+                      <Text className={`font-bold ${isActive ? 'text-white text-lg' : 'text-gray-400'}`}>{step.step}</Text>
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`font-bold text-lg mb-1 ${isActive ? 'text-white' : 'text-gray-300'}`}>{step.title}</Text>
+                    <Text className={`text-sm leading-relaxed ${isActive ? 'text-gray-300' : 'text-gray-500'}`}>
+                      {step.text}
+                    </Text>
+                  </View>
+                </View>
+
+                {isActive && (
+                  <View className="mt-2">
+                    {step.timer_minutes ? (
+                      <TimerBox minutes={step.timer_minutes} />
+                    ) : (
+                      <View className="border-t border-white/10 pt-4 mt-2" />
+                    )}
+                    
+                    {index < steps.length - 1 ? (
+                      <TouchableOpacity 
+                        onPress={() => setActiveStep(step.step + 1)}
+                        className="mt-4 bg-[#1c1c1e] border border-[#0fa958]/50 py-3 rounded-xl items-center"
+                      >
+                        <Text className="text-[#0fa958] font-bold">Next Step</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity 
+                        onPress={handleComplete}
+                        className="mt-4 bg-[#0fa958]/20 border border-[#0fa958] py-3 rounded-xl items-center"
+                      >
+                        <Text className="text-[#0fa958] font-bold">Recipe Complete!</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

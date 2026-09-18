@@ -252,3 +252,42 @@ export async function getRecipesByIds(ids: string[]): Promise<Recipe[]> {
     return [];
   }
 }
+
+export async function getRecipeHistory(userId: string) {
+  const { data, error } = await supabase
+    .from('recipe_history')
+    .select('id, created_at, recipes(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error fetching history:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function addRecipeHistory(userId: string, recipeId: string) {
+  const { data, error } = await supabase
+    .from('recipe_history')
+    .insert({ user_id: userId, recipe_id: recipeId })
+    .select()
+    .single();
+  if (error) {
+    console.error('Error adding history:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function deleteRecipeHistory(id: string) {
+  const { error } = await supabase
+    .from('recipe_history')
+    .delete()
+    .eq('id', id);
+  if (error) {
+    console.error('Error deleting history:', error);
+    return false;
+  }
+  return true;
+}
+

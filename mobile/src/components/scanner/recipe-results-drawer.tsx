@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { ChefHat, Clock, Users, Check, X } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import { wikiImageMap } from '../../lib/image-map';
 import { Link, router } from 'expo-router';
 import type { RecipeMatch, Ingredient } from '../../lib/types';
 
@@ -39,7 +40,7 @@ export function RecipeResultsDrawer({
         disappearsOnIndex={-1}
         appearsOnIndex={1}
         opacity={0.3}
-        pressBehavior="collapse"
+        pressBehavior="close"
       />
     ),
     []
@@ -53,7 +54,10 @@ export function RecipeResultsDrawer({
       ref={bottomSheetRef}
       index={isOpen ? 1 : -1}
       snapPoints={snapPoints}
-      enablePanDownToClose={false}
+      enablePanDownToClose={true}
+      onChange={(idx) => {
+        if (idx === -1) onClose();
+      }}
       onClose={onClose}
       backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: '#111' }}
@@ -61,8 +65,14 @@ export function RecipeResultsDrawer({
     >
       <View className="flex-1 bg-[#111]">
         {/* Header */}
-        <View className="px-6 pb-4 border-b border-white/10">
-          <Text className="text-xl font-semibold text-white">
+        <View className="px-6 pb-4 border-b border-white/10 relative">
+          <TouchableOpacity 
+            onPress={onClose} 
+            className="absolute top-0 right-6 w-8 h-8 rounded-full bg-white/10 items-center justify-center z-10"
+          >
+            <X size={16} color="white" />
+          </TouchableOpacity>
+          <Text className="text-xl font-semibold text-white mr-10">
             Recipe Suggestions
           </Text>
           <Text className="text-sm text-white/60 mt-1">
@@ -130,7 +140,7 @@ function RecipeCard({ match, type }: { match: RecipeMatch; type: 'ready' | 'miss
   const { recipe, missingIngredients } = match;
 
   return (
-    <Link href={`/recipe/${recipe.id}`} asChild>
+    <Link href={`/recipe/${recipe.id}?from=scan`} asChild>
       <TouchableOpacity className="bg-[#1c1c1e] rounded-2xl flex-row overflow-hidden active:bg-[#2c2c2e] border border-white/5 h-28">
         <View className="flex-1 p-4 justify-center">
           <Text className="font-semibold text-white text-lg mb-1" numberOfLines={1}>{recipe.name}</Text>
@@ -143,8 +153,8 @@ function RecipeCard({ match, type }: { match: RecipeMatch; type: 'ready' | 'miss
           )}
         </View>
         
-        {recipe.image_url ? (
-          <Image source={{ uri: recipe.image_url }} className="w-28 h-full bg-white/5" contentFit="cover" />
+        {recipe.image_url || wikiImageMap[recipe.name] ? (
+          <Image source={{ uri: recipe.image_url || wikiImageMap[recipe.name] }} className="w-28 h-full bg-white/5" contentFit="cover" />
         ) : (
           <View className="w-28 h-full bg-white/5 items-center justify-center">
             <ChefHat size={24} className="text-white/30" />

@@ -9,11 +9,7 @@ interface FeaturedRecipesProps {
   recipes: Recipe[];
 }
 
-const recipeImages: Record<string, any> = {
-  'Chicken Adobo': require('../../../assets/images/adobo.jpg'),
-  'Sinigang na Baboy': require('../../../assets/images/sinigang.jpg'),
-  'Pancit Canton': require('../../../assets/images/pancit.jpg'),
-};
+import { wikiImageMap } from '../../lib/image-map';
 
 export function FeaturedRecipes({ recipes }: FeaturedRecipesProps) {
   const featuredRecipes = recipes.slice(0, 2);
@@ -46,7 +42,7 @@ export function FeaturedRecipes({ recipes }: FeaturedRecipesProps) {
               {/* Image */}
               <View className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-muted">
                 <Image
-                  source={recipeImages[recipe.name] || require('../../../assets/images/adobo.jpg')}
+                  source={{ uri: recipe.image_url || wikiImageMap[recipe.name] || 'https://placehold.co/600x400/0fa958/ffffff.png?text=Recipe' }}
                   style={{ width: '100%', height: '100%' }}
                   contentFit="cover"
                 />

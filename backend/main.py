@@ -1,10 +1,14 @@
+import base64
+import time
+import numpy as np
+import cv2
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import base64
-import time
+from ultralytics import YOLO
 
-app = FastAPI(title="SAM 2 Food Scanner API")
+app = FastAPI(title="YOLO Food Scanner API")
 
 # Allow the React Native app to communicate with this server
 app.add_middleware(
@@ -15,44 +19,79 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load the newly trained YOLO model globally on server start!
+model_path = os.path.join(os.getcwd(), "best.pt")
+print(f"🚀 Loading YOLO model from: {model_path}")
+if not os.path.exists(model_path):
+    print("⚠️ WARNING: best.pt not found! Make sure you copied it from the runs folder.")
+    model = None
+else:
+    model = YOLO(model_path)
+
 class ImageRequest(BaseModel):
     base64_image: str
 
 @app.post("/predict")
 async def predict_ingredients(request: ImageRequest):
+    if model is None:
+         raise HTTPException(status_code=500, detail="Model best.pt is not loaded.")
+         
     try:
-        # 1. Decode the base64 image coming from the React Native app
+        start_time = time.time()
+        
+        # 1. Decode the base64 string from the Android App into an Image
         image_data = base64.b64decode(request.base64_image)
+        nparr = np.frombuffer(image_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
-        # -------------------------------------------------------------
-        # TODO: THIS IS WHERE YOU PLUG IN YOUR SAM 2 / MODEL CODE!
-        # Example pseudo-code:
-        # image = load_image_from_bytes(image_data)
-        # masks, classes = sam2_model.predict(image)
-        # ingredients = process_classes(classes)
-        # -------------------------------------------------------------
+        if img is None:
+             raise ValueError("Could not decode base64 string into an image.")
+             
+        height, width = img.shape[:2]
         
-        # For now, we return mock data so you can test the app connection!
-        time.sleep(1) # Simulate AI processing time
+        # conf=0.4 ignores low-confidence guesses
+        # iou=0.3 strictly merges overlapping boxes of the same object
+        results = model.predict(source=img, imgsz=640, conf=0.4, iou=0.3)
         
-        # This format mimics the old Roboflow format so the app doesn't break
+        # 3. Parse the results into the exact JSON format your app expects
+        predictions = []
+        result = results[0] # We only sent 1 image
+        
+        for box in result.boxes:
+            # YOLO provides exact coordinates
+            x_center, y_center, w, h = box.xywh[0].tolist()
+            conf = float(box.conf[0])
+            class_id = int(box.cls[0])
+            class_name = result.names[class_id]
+            
+            # Format expected by React Native
+            predictions.append({
+                "class": class_name,
+                "confidence": round(conf, 3),
+                "x": round(x_center, 1),
+                "y": round(y_center, 1),
+                "width": round(w, 1),
+                "height": round(h, 1)
+            })
+            
+        process_time = round(time.time() - start_time, 3)
+        print(f"✅ Found {len(predictions)} ingredients in {process_time}s!")
+        
         return {
-            "predictions": [
-                {"class": "Tomato", "confidence": 0.95, "x": 100, "y": 100},
-                {"class": "Egg", "confidence": 0.88, "x": 200, "y": 200}
-            ],
-            "image": {"width": 800, "height": 800},
-            "time": 1.0
+            "predictions": predictions,
+            "image": {"width": width, "height": height},
+            "time": process_time
         }
         
     except Exception as e:
+        print(f"❌ Error during prediction: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def root():
-    return {"message": "SAM 2 Food Scanner API is running!"}
+    return {"message": "YOLO Food Scanner API is running!"}
 
 if __name__ == "__main__":
     import uvicorn
-    # Runs the server on all IP addresses so the phone can reach it
+    # Runs the server on all IP addresses so the phone can reach it on port 8000
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
