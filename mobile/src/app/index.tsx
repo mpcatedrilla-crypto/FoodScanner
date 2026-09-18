@@ -46,7 +46,7 @@ export default function HomeScreen() {
     <>
       {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
       <StatusBar style="light" />
-      <ScrollView className="flex-1 bg-[#09090b]" bounces={false}>
+      <ScrollView className="flex-1 bg-[#09090b]" bounces={false} showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <View className="h-[360px] w-full relative">
           <Image
