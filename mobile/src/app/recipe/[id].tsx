@@ -1,9 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, BackHandler } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, BackHandler, Vibration } from 'react-native';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Clock, Users, ChefHat, Play, Pause, TimerReset } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import * as Notifications from 'expo-notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 import { getRecipeById, addRecipeHistory } from '../../lib/actions';
 import type { RecipeWithIngredients } from '../../lib/types';
@@ -13,7 +22,17 @@ import { useAuth } from '../../lib/auth-context';
 function TimerBox({ minutes }: { minutes: number }) {
   const [timeLeft, setTimeLeft] = useState(minutes * 60);
   const [isActive, setIsActive] = useState(false);
+  const [notifId, setNotifId] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        await Notifications.requestPermissionsAsync();
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
@@ -23,6 +42,7 @@ function TimerBox({ minutes }: { minutes: number }) {
     } else if (timeLeft === 0) {
       if (isActive) {
         setIsActive(false);
+        Vibration.vibrate([0, 500, 200, 500, 200, 500]);
         Alert.alert("Time's up!", "Your step is complete.");
       }
       if (timerRef.current) clearInterval(timerRef.current);
@@ -32,8 +52,29 @@ function TimerBox({ minutes }: { minutes: number }) {
     };
   }, [isActive, timeLeft]);
 
-  const toggleTimer = () => setIsActive(!isActive);
-  const resetTimer = () => {
+  const toggleTimer = async () => {
+    if (!isActive) {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Time's up! \uD83D\uDC68\u200D\uD83C\uDF73",
+          body: 'Your recipe step is complete.',
+          sound: true,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: timeLeft > 0 ? timeLeft : 1 },
+      });
+      setNotifId(id);
+    } else if (notifId) {
+      await Notifications.cancelScheduledNotificationAsync(notifId);
+      setNotifId(null);
+    }
+    setIsActive(!isActive);
+  };
+
+  const resetTimer = async () => {
+    if (notifId) {
+      await Notifications.cancelScheduledNotificationAsync(notifId);
+      setNotifId(null);
+    }
     setIsActive(false);
     setTimeLeft(minutes * 60);
   };
