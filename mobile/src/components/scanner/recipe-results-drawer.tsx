@@ -137,10 +137,11 @@ export function RecipeResultsDrawer({
 }
 
 function RecipeCard({ match, type }: { match: RecipeMatch; type: 'ready' | 'missing' }) {
-  const { recipe, missingIngredients } = match;
+  const { recipe, missingIngredients, matchedIngredients } = match;
+  const scannedParam = matchedIngredients.map(i => i.id).join(',');
 
   return (
-    <Link href={`/recipe/${recipe.id}?from=scan`} asChild>
+    <Link href={{ pathname: '/recipe/[id]', params: { id: recipe.id, from: 'scan', scanned: scannedParam } }} asChild>
       <TouchableOpacity className="bg-[#1c1c1e] rounded-2xl flex-row overflow-hidden active:bg-[#2c2c2e] border border-white/5 h-28">
         <View className="flex-1 p-4 justify-center">
           <Text className="font-semibold text-white text-lg mb-1" numberOfLines={1}>{recipe.name}</Text>

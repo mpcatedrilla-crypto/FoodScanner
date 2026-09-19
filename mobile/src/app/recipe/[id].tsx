@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, BackHandler, Vibration } from 'react-native';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, Users, ChefHat, Play, Pause, TimerReset } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, ChefHat, Play, Pause, TimerReset, Check } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -113,8 +114,66 @@ function TimerBox({ minutes }: { minutes: number }) {
 }
 
 export default function CookModeScreen() {
-  const { id, from } = useLocalSearchParams<{ id: string, from?: string }>();
+  const { id, from, scanned } = useLocalSearchParams<{ id: string, from?: string, scanned?: string }>();
   const { session } = useAuth();
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeStep, setActiveStep] = useState(1);
+
+  useEffect(() => {
+    const initStorage = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(`recipe_checks_${id}`);
+        let initialSet = new Set<string>();
+        
+        if (stored) {
+          initialSet = new Set(JSON.parse(stored));
+        }
+        
+        if (scanned) {
+          const scannedIds = scanned.split(',');
+          scannedIds.forEach(scannedId => initialSet.add(scannedId));
+          await AsyncStorage.setItem(`recipe_checks_${id}`, JSON.stringify([...initialSet]));
+        }
+        
+        setCheckedIngredients(initialSet);
+      } catch (e) {}
+    };
+    initStorage();
+  }, [id, scanned]);
+
+  const uniqueIngredients = useMemo(() => {
+    if (!recipe?.recipe_ingredients) return [];
+    const seen = new Set<string>();
+    return recipe.recipe_ingredients.filter(ri => {
+      const ingId = ri.ingredient?.id;
+      if (!ingId || seen.has(ingId)) return false;
+      seen.add(ingId);
+      return true;
+    });
+  }, [recipe?.recipe_ingredients]);
+
+  const toggleIngredient = async (ingId: string) => {
+    const next = new Set(checkedIngredients);
+    if (next.has(ingId)) next.delete(ingId);
+    else next.add(ingId);
+    setCheckedIngredients(next);
+    await AsyncStorage.setItem(`recipe_checks_${id}`, JSON.stringify([...next]));
+  };
+
+  const toggleAll = async () => {
+    if (!recipe) return;
+    if (checkedIngredients.size === uniqueIngredients.length) {
+      setCheckedIngredients(new Set());
+      await AsyncStorage.removeItem(`recipe_checks_${id}`);
+    } else {
+      const allIds = uniqueIngredients.map(r => r.ingredient?.id).filter(Boolean) as string[];
+      const next = new Set(allIds);
+      setCheckedIngredients(next);
+      await AsyncStorage.setItem(`recipe_checks_${id}`, JSON.stringify([...next]));
+    }
+  };
 
   const handleBack = () => {
     if (from) {
@@ -129,6 +188,8 @@ export default function CookModeScreen() {
     if (session?.user && id) {
       await addRecipeHistory(session.user.id, id as string);
     }
+    await AsyncStorage.removeItem(`recipe_checks_${id}`);
+    setCheckedIngredients(new Set());
     setActiveStep(1);
     handleBack();
   };
@@ -139,10 +200,7 @@ export default function CookModeScreen() {
       return () => sub.remove();
     }, [from])
   );
-  const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeStep, setActiveStep] = useState(1);
-
+  
   useFocusEffect(
     React.useCallback(() => {
       setActiveStep(1);
@@ -249,6 +307,43 @@ export default function CookModeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Ingredients List */}
+        {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 && (
+          <View className="mb-8 px-2">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-white text-xl font-bold">Ingredients</Text>
+              <TouchableOpacity onPress={toggleAll} className="flex-row items-center bg-[#0fa958]/10 px-3 py-1.5 rounded-full border border-[#0fa958]/30">
+                <Check size={14} color="#0fa958" className="mr-1.5" />
+                <Text className="text-[#0fa958] text-xs font-bold">Check All</Text>
+              </TouchableOpacity>
+            </View>
+            <View className="bg-[#1c1c1e] rounded-xl overflow-hidden border border-white/5">
+              {uniqueIngredients.map((ri: any, idx: number) => {
+                const ingId = ri.ingredient?.id;
+                const isChecked = checkedIngredients.has(ingId);
+                const isLast = idx === uniqueIngredients.length - 1;
+                
+                return (
+                  <TouchableOpacity 
+                    key={idx} 
+                    onPress={() => toggleIngredient(ingId)}
+                    className={`flex-row items-center py-4 px-4 ${!isLast ? 'border-b border-white/5' : ''}`}
+                    activeOpacity={0.7}
+                  >
+                    <View className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${isChecked ? 'bg-[#0fa958] border-[#0fa958]' : 'border-gray-500'}`}>
+                      {isChecked && <Check size={12} color="white" />}
+                    </View>
+                    <Text className={`flex-1 text-base ${isChecked ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
+                      {ri.ingredient?.name}
+                    </Text>
+                    <Text className="text-gray-500 text-sm ml-2">to taste</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         <View className="flex-row justify-between items-end mb-4 px-2">
           <Text className="text-white text-xl font-bold">Cooking Steps</Text>
