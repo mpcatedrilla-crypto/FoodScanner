@@ -289,7 +289,7 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <VisionCamera ref={cameraRef} style={StyleSheet.absoluteFill} device={device} isActive={isFocused} photo={true} torch={torch ? 'on' : 'off'} />
+      <VisionCamera ref={cameraRef} style={StyleSheet.absoluteFill} device={device} isActive={isFocused} torchMode={torch ? 'on' : 'off'} photo={true} />
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {predictions.map((pred, idx) => {
           const scale = Math.max(SCREEN_W / rawImageSize.w, SCREEN_H / rawImageSize.h);
