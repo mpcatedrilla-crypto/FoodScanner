@@ -21,9 +21,9 @@ app.add_middleware(
 
 # Load the newly trained YOLO model globally on server start!
 model_path = os.path.join(os.getcwd(), "best.pt")
-print(f"🚀 Loading YOLO model from: {model_path}")
+print(f"Loading YOLO model from: {model_path}")
 if not os.path.exists(model_path):
-    print("⚠️ WARNING: best.pt not found! Make sure you copied it from the runs folder.")
+    print("WARNING: best.pt not found! Make sure you copied it from the runs folder.")
     model = None
 else:
     model = YOLO(model_path)
@@ -75,7 +75,7 @@ async def predict_ingredients(request: ImageRequest):
             })
             
         process_time = round(time.time() - start_time, 3)
-        print(f"✅ Found {len(predictions)} ingredients in {process_time}s!")
+        print(f"Found {len(predictions)} ingredients in {process_time}s!")
         
         return {
             "predictions": predictions,
@@ -84,7 +84,7 @@ async def predict_ingredients(request: ImageRequest):
         }
         
     except Exception as e:
-        print(f"❌ Error during prediction: {e}")
+        print(f"Error during prediction: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
