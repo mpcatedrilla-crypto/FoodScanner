@@ -69,8 +69,14 @@ export async function detectIngredients(base64Image: string): Promise<RoboflowRe
 
   const rawData = await response.json();
   
+  // Normalize any chicken part (chicken-breast, chicken-thigh, etc.) → "chicken"
+  const predictions = (rawData.predictions || []).map((p: RoboflowPrediction) => ({
+    ...p,
+    class: p.class.toLowerCase().startsWith('chicken') ? 'chicken' : p.class,
+  }));
+
   return {
-    predictions: rawData.predictions || [],
+    predictions,
     image: rawData.image || { width: 640, height: 640 },
     time: rawData.time || 0.1,
   };
