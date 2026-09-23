@@ -120,7 +120,7 @@ export function RecipeResultsDrawer({
               {/* Missing Ingredients */}
               {missingIngredientsList.length > 0 && (
                 <View>
-                  <Text className="text-[#f59e0b] font-bold mb-3 px-2">🛒 Missing Ingredients</Text>
+                  <Text className="text-[#f59e0b] font-bold mb-3 px-2">🛒 Needed Recipes</Text>
                   <View className="gap-3">
                     {missingIngredientsList.slice(0, 5).map(match => (
                       <RecipeCard key={match.recipe.id} match={match} type="missing" />
@@ -149,7 +149,7 @@ function RecipeCard({ match, type }: { match: RecipeMatch; type: 'ready' | 'miss
             <Text className="text-sm text-white/60" numberOfLines={1}>You have all required ingredients!</Text>
           ) : (
             <Text className="text-sm text-[#ef4444]" numberOfLines={1}>
-              Missing: {missingIngredients.map(i => i.name).join(', ')}
+              Needed: {missingIngredients.map(i => i.name).join(', ')}
             </Text>
           )}
         </View>
