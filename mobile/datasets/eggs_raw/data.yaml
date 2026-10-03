@@ -1,0 +1,5 @@
+path: C:/projects/food-scanner/mobile/datasets/eggs_raw
+train: images
+val: images
+nc: 1
+names: ['egg']
