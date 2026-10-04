@@ -85,7 +85,7 @@ export default function HomeScreen() {
         </View>
 
         <View className="flex-1">
-          <View className="px-6 pb-[100px] pt-2 flex-1">
+          <View className="px-6 pb-2 pt-2 flex-1">
             {/* Categories */}
             <View className="flex-row justify-between items-center mb-1">
               <Text className="text-gray-900 text-xl font-bold">Available recipes</Text>
@@ -100,7 +100,7 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                   key={cat.name}
                   className="w-full flex-1 rounded-xl mb-3 overflow-hidden relative flex-row items-center shadow-sm"
-                  style={{ minHeight: 65, maxHeight: 90 }}
+                  style={{ minHeight: 65, maxHeight: 120 }}
                   onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
                 >
                   <Image
@@ -129,6 +129,7 @@ export default function HomeScreen() {
     </>
   );
 }
+
 
 
 
