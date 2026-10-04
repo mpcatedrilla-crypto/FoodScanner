@@ -83,7 +83,7 @@ export default function ScanScreen() {
         { compress: 0.5, format: SaveFormat.JPEG, base64: true }
       );
 
-      setFrozenImageUri(manipResult.uri);
+      setFrozenImageUri(fileUri);
       if (!manipResult.base64) return;
       
       let base64 = manipResult.base64;
@@ -212,31 +212,51 @@ export default function ScanScreen() {
         </View>
 
         <View style={styles.frozenCameraContainer}>
-          {frozenImageUri ? (
-            <Image source={{ uri: frozenImageUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-          ) : (
-            <VisionCamera 
-              style={StyleSheet.absoluteFill} 
-              device={device} 
-              isActive={false}
-            />
-          )}
-          {predictions.map((pred, idx) => {
-            if (pred.x == null || pred.y == null || pred.width == null || pred.height == null) return null;
-            const scaleX = SCREEN_W / 640;
-            const scaleY = SCREEN_H / 640;
-            const left = (pred.x - pred.width / 2) * scaleX;
-            const top = (pred.y - pred.height / 2) * scaleY;
-            const width = pred.width * scaleX;
-            const height = pred.height * scaleY;
-            return (
-              <View key={pred.id || idx} style={[styles.bbox, { left, top, width, height, borderColor: '#ea580c' }]}>
-                <View style={[styles.bboxLabel, { backgroundColor: '#ea580c', top: -20, left: -3 }]}>
-                  <Text style={styles.bboxText} numberOfLines={1}>{pred.class} {Math.round(pred.confidence * 100)}%</Text>
+          <View style={styles.imageFrame}>
+            {frozenImageUri ? (
+              <Image source={{ uri: frozenImageUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            ) : (
+              <VisionCamera 
+                style={StyleSheet.absoluteFill} 
+                device={device} 
+                isActive={false}
+              />
+            )}
+            {predictions.map((pred, idx) => {
+              if (pred.x == null || pred.y == null || pred.width == null || pred.height == null) return null;
+              
+              const FRAME_WIDTH = SCREEN_W - 40;
+              const FRAME_HEIGHT = 260;
+              
+              const imgRatio = SCREEN_W / SCREEN_H;
+              const frameRatio = FRAME_WIDTH / FRAME_HEIGHT;
+
+              let scale, offsetX = 0, offsetY = 0;
+              if (imgRatio > frameRatio) {
+                scale = FRAME_HEIGHT / SCREEN_H;
+                offsetX = (SCREEN_W * scale - FRAME_WIDTH) / 2;
+              } else {
+                scale = FRAME_WIDTH / SCREEN_W;
+                offsetY = (SCREEN_H * scale - FRAME_HEIGHT) / 2;
+              }
+
+              const left = (pred.x - pred.width / 2) * (SCREEN_W / 640) * scale - offsetX;
+              const top = (pred.y - pred.height / 2) * (SCREEN_H / 640) * scale - offsetY;
+              const width = pred.width * (SCREEN_W / 640) * scale;
+              const height = pred.height * (SCREEN_H / 640) * scale;
+              
+              // Only render if it's somewhat visible within the frame
+              if (top > FRAME_HEIGHT || left > FRAME_WIDTH || top + height < 0 || left + width < 0) return null;
+
+              return (
+                <View key={pred.id || idx} style={[styles.bbox, { left, top, width, height, borderColor: '#ea580c', borderWidth: 2 }]}>
+                  <View style={[styles.bboxLabel, { backgroundColor: '#ea580c', top: -16, left: -2, paddingHorizontal: 4, paddingVertical: 2 }]}>
+                    <Text style={[styles.bboxText, { fontSize: 10 }]} numberOfLines={1}>{pred.class} {Math.round(pred.confidence * 100)}%</Text>
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
         </View>
 
         <ScrollView style={{ flex: 1, padding: 20 }} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -355,7 +375,8 @@ const styles = StyleSheet.create({
   
   resultsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF9F2' },
   resultsHeaderText: { fontSize: 18, fontWeight: 'bold', color: '#1f2937' },
-  frozenCameraContainer: { height: 250, width: '100%', overflow: 'hidden', backgroundColor: '#000', position: 'relative' },
+  frozenCameraContainer: { width: '100%', alignItems: 'center', backgroundColor: '#FFF9F2', paddingVertical: 16, paddingHorizontal: 20 },
+  imageFrame: { height: 260, width: '100%', borderRadius: 16, overflow: 'hidden', backgroundColor: '#e5e7eb', borderWidth: 4, borderColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#1f2937', marginTop: 10, marginBottom: 16 },
   ingredientCard: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#f3f4f6', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
   ingredientTitle: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 4 },
@@ -373,6 +394,8 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700', textTransform: 'uppercase' },
   disabledBtn: { backgroundColor: 'rgba(234, 88, 12, 0.4)' },
 });
+
+
 
 
 
