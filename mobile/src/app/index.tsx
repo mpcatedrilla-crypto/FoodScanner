@@ -88,41 +88,50 @@ export default function HomeScreen() {
           <View className="px-6 pb-[100px] pt-2">
             {/* Categories */}
             <View className="flex-row justify-between items-center mb-1">
-              <Text className="text-gray-900 text-xl font-bold">Recipes Available</Text>
+              <Text className="text-gray-900 text-xl font-bold">Available recipes</Text>
               <TouchableOpacity onPress={() => router.push('/recipes')}>
                 <Text className="text-[#ea580c] text-sm font-bold">View all &gt;</Text>
               </TouchableOpacity>
             </View>
-            <Text className="text-gray-500 text-xs mb-4">Filipino Available Recipes by category</Text>
+            <Text className="text-gray-500 text-xs mb-4">Filipino recipes available by category</Text>
             
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible mb-8">
-              {categories.map((cat, i) => (
-                <TouchableOpacity 
-                  key={cat.name}
-                  className="w-[100px] h-[110px] rounded-2xl mr-4 overflow-hidden relative items-center justify-end pb-3 border border-gray-200"
-                  onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
-                >
-                  <LinearGradient
-                    colors={cat.color as [string, string]}
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                  />
-                  <View className="absolute inset-0 opacity-40 mix-blend-overlay">
-                      <Image
-                        source={cat.image}
-                        style={{ width: '100%', height: '100%' }}
-                        contentFit="cover"
-                      />
-                  </View>
-                  <cat.icon size={28} color="rgba(255,255,255,0.9)" className="mb-2" />
-                  <Text className="text-white text-sm font-medium">{cat.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                          <View className="mb-8">
+                {categories.map((cat, i) => (
+                  <TouchableOpacity 
+                    key={cat.name}
+                    className="w-full h-[90px] rounded-xl mb-3 overflow-hidden relative flex-row items-center shadow-sm"
+                    onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
+                  >
+                    <Image
+                      source={cat.image}
+                      style={{ position: 'absolute', width: '100%', height: '100%' }}
+                      contentFit="cover"
+                    />
+                    <LinearGradient
+                      colors={['transparent', cat.color[0], cat.color[1]]}
+                      start={{ x: 0.2, y: 0 }}
+                      end={{ x: 0.8, y: 0 }}
+                      style={{ position: 'absolute', width: '100%', height: '100%' }}
+                    />
+                    <View className="flex-1" />
+                    <View className="w-[100px] items-center justify-center mr-4">
+                      <cat.icon size={26} color="white" />
+                      <Text className="text-white text-[15px] font-bold mt-1">{cat.name}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
           </View>
         </ScrollView>
       </View>
     </>
   );
 }
+
+
+
+
+
+
 
 
