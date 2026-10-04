@@ -35,11 +35,11 @@ export default function HomeScreen() {
   if (!isReady) return null;
 
   const categories = [
-    { name: 'Chicken', icon: Drumstick, color: ['#ea580c', '#c2410c'], query: 'chicken|manok', image: require('../assets/images/cat_chicken.png') },
-    { name: 'Pork', icon: Drumstick, color: ['#ef4444', '#b91c1c'], query: 'pork|baboy|lechon', image: require('../assets/images/cat_pork.png') },
-    { name: 'Beef', icon: Beef, color: ['#b91c1c', '#7f1d1d'], query: 'beef|baka', image: require('../assets/images/cat_beef.png') },
-    { name: 'Seafood', icon: Fish, color: ['#3b82f6', '#1d4ed8'], query: 'fish|shrimp|squid|bangus|tilapia|pusit|isda', image: require('../assets/images/cat_seafood.png') },
-    { name: 'Vegetables', icon: Leaf, color: ['#84cc16', '#4d7c0f'], query: 'vegetable|gourd|eggplant|squash|gulay|pinakbet', image: require('../assets/images/cat_veggies.png') },
+    { name: 'Chicken', icon: Drumstick, color: ['#ea580c', '#c2410c'], query: 'chicken|manok', image: require('../assets/images/cat_chicken_new.jpg') },
+    { name: 'Pork', icon: Drumstick, color: ['#ef4444', '#b91c1c'], query: 'pork|baboy|lechon', image: require('../assets/images/cat_pork_new.jpg') },
+    { name: 'Beef', icon: Beef, color: ['#b91c1c', '#7f1d1d'], query: 'beef|baka', image: require('../assets/images/cat_beef_new.jpg') },
+    { name: 'Seafood', icon: Fish, color: ['#3b82f6', '#1d4ed8'], query: 'fish|shrimp|squid|bangus|tilapia|pusit|isda', image: require('../assets/images/cat_seafood_new.jpg') },
+    { name: 'Vegetables', icon: Leaf, color: ['#84cc16', '#4d7c0f'], query: 'vegetable|gourd|eggplant|squash|gulay|pinakbet', image: require('../assets/images/cat_veggies_new.jpg') },
   ];
 
   return (
@@ -129,6 +129,7 @@ export default function HomeScreen() {
     </>
   );
 }
+
 
 
 
