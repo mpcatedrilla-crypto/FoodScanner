@@ -57,26 +57,28 @@ export default function ScanScreen() {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
 
   const isProcessingRef = useRef(false);
+  const setDebugLog = (m: string) => console.log(m);
 
   const processLiveFrame = async () => {
-    if (!isLiveScanningRef.current || isProcessingRef.current || !cameraRef.current || ingredientsDB.length === 0) return;
-
+    if (isProcessingRef.current || !cameraRef.current || !isLiveScanning) return;
     try {
       isProcessingRef.current = true;
       
-      const snap = await (cameraRef.current as any).takeSnapshot({ quality: 85 });
-      if (!snap) return;
+      const snap = await cameraRef.current.takeSnapshot();
+      if (!snap) {
+          setDebugLog("No snapshot captured");
+          return;
+      }
       
       let rawPath = FileSystem.documentDirectory + 'snap.jpg';
       if (rawPath.startsWith('file://')) rawPath = rawPath.replace('file://', '');
       
-      // We cannot use await snap.saveToFileAsync, instead snap might be the path. 
-      // VisionCamera takeSnapshot returns an object with { path }
-      // Actually Expo Camera returned { uri }, Vision Camera returns { path }
-      const photoUri = 'file://' + snap.path;
+      await snap.saveToFileAsync(rawPath, 'jpg', 50);
+      
+      const fileUri = 'file://' + rawPath;
 
       const manipResult = await manipulateAsync(
-        photoUri,
+        fileUri,
         [{ resize: { width: 640, height: 640 } }],
         { compress: 0.5, format: SaveFormat.JPEG, base64: true }
       );
@@ -89,34 +91,34 @@ export default function ScanScreen() {
         base64 = base64.split(',')[1];
       }
       
-      if (!isLiveScanningRef.current) return;
-      
       const response = await detectIngredients(base64);
       if (!isLiveScanningRef.current) return;
       const detected = response?.predictions || [];
       setPredictions(detected);
+      
+      setDebugLog(`ONNX ok: ${detected.length} items`);
 
       // Match against local DB
       const currentMatched: Ingredient[] = [];
-      for (const pred of detected) {
-        const hit = ingredientsDB.find(i => {
-          const sanitize = (str: string) => str ? str.replace(/[\u200B-\u200D\uFEFF]/g, '').toLowerCase().trim() : '';
-          const pClass = sanitize(pred.class);
-          const iName = sanitize(i.name);
-          const iClasses = i.coco_class ? i.coco_class.split(',').map(sanitize) : [];
-          return iClasses.includes(pClass) || iName === pClass;
-        });
-        if (hit && !currentMatched.find(m => m.id === hit.id)) currentMatched.push(hit);
-      }
-      setMatchedIngredients(currentMatched);
+        for (const pred of detected) {
+          const hit = ingredientsDB.find(i => {
+            const sanitize = (str: string) => str ? str.replace(/[\u200B-\u200D\uFEFF]/g, '').toLowerCase().trim() : '';
+            const pClass = sanitize(pred.class);
+            const iName = sanitize(i.name);
+            const iClasses = i.coco_class ? i.coco_class.split(',').map(sanitize) : [];
+            return iClasses.includes(pClass) || iName === pClass;
+          });
+          if (hit && !currentMatched.find(m => m.id === hit.id)) currentMatched.push(hit);
+        }
+        setMatchedIngredients(currentMatched);
     } catch (err) {
-      console.log("process error", err);
+      setDebugLog(`UI Error: ${err}`);
     } finally {
       isProcessingRef.current = false;
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
     let isCancelled = false;
     const loop = async () => {
@@ -371,6 +373,10 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700', textTransform: 'uppercase' },
   disabledBtn: { backgroundColor: 'rgba(234, 88, 12, 0.4)' },
 });
+
+
+
+
 
 
 
