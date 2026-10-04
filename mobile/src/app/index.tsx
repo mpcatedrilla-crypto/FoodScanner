@@ -48,7 +48,7 @@ export default function HomeScreen() {
       <StatusBar style="dark" />
       <View className="flex-1 bg-[#FFF9F2]">
         {/* Hero Section */}
-        <View className="h-[360px] w-full relative">
+        <View className="h-[280px] w-full relative">
           <Image
             source={require('../assets/images/home_bg.jpg')}
             style={{ width: '100%', height: '100%', position: 'absolute' }}
@@ -84,8 +84,8 @@ export default function HomeScreen() {
           </SafeAreaView>
         </View>
 
-        <ScrollView className="flex-1" bounces={false} overScrollMode="never" showsVerticalScrollIndicator={false}>
-          <View className="px-6 pb-[100px] pt-2">
+        <View className="flex-1">
+          <View className="px-6 pb-[100px] pt-2 flex-1">
             {/* Categories */}
             <View className="flex-row justify-between items-center mb-1">
               <Text className="text-gray-900 text-xl font-bold">Available recipes</Text>
@@ -95,42 +95,40 @@ export default function HomeScreen() {
             </View>
             <Text className="text-gray-500 text-xs mb-4">Filipino recipes available by category</Text>
             
-                          <View className="mb-8">
-                {categories.map((cat, i) => (
-                  <TouchableOpacity 
-                    key={cat.name}
-                    className="w-full h-[90px] rounded-xl mb-3 overflow-hidden relative flex-row items-center shadow-sm"
-                    onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
-                  >
-                    <Image
-                      source={cat.image}
-                      style={{ position: 'absolute', width: '100%', height: '100%' }}
-                      contentFit="cover"
-                    />
-                    <LinearGradient
-                      colors={['transparent', cat.color[0], cat.color[1]]}
-                      start={{ x: 0.2, y: 0 }}
-                      end={{ x: 0.8, y: 0 }}
-                      style={{ position: 'absolute', width: '100%', height: '100%' }}
-                    />
-                    <View className="flex-1" />
-                    <View className="w-[100px] items-center justify-center mr-4">
-                      <cat.icon size={26} color="white" />
-                      <Text className="text-white text-[15px] font-bold mt-1">{cat.name}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                        <View className="flex-1 mb-6">
+              {categories.map((cat, i) => (
+                <TouchableOpacity 
+                  key={cat.name}
+                  className="w-full flex-1 rounded-xl mb-3 overflow-hidden relative flex-row items-center shadow-sm"
+                  style={{ minHeight: 65, maxHeight: 90 }}
+                  onPress={() => router.push(`/recipes?category=${encodeURIComponent(cat.query)}&title=${encodeURIComponent(cat.name)}`)}
+                >
+                  <Image
+                    source={cat.image}
+                    style={{ position: 'absolute', width: '100%', height: '100%' }}
+                    contentFit="cover"
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'transparent', cat.color[0], cat.color[1]]}
+                    locations={[0, 0.4, 0.75, 1]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ position: 'absolute', width: '100%', height: '100%' }}
+                  />
+                  <View className="flex-1" />
+                  <View className="w-[110px] items-center justify-center mr-2">
+                    <cat.icon size={26} color="white" />
+                    <Text className="text-white text-[15px] font-bold mt-1">{cat.name}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </ScrollView>
+        </View>
       </View>
     </>
   );
 }
-
-
-
-
 
 
 
