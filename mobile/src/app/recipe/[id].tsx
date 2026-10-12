@@ -178,7 +178,9 @@ export default function CookModeScreen() {
  };
 
  const handleBack = () => {
- if (from && from !== 'index') {
+ if (router.canGoBack()) {
+ router.back();
+ } else if (from && from !== 'index') {
  router.navigate((`/${from}`) as any);
  } else {
  router.navigate('/');
@@ -298,7 +300,7 @@ export default function CookModeScreen() {
  <View className="px-5 pt-2">
  <Text className="text-stone-900 text-2xl font-bold mb-2 shadow-sm">{recipe.name}</Text>
  <Text className="text-stone-600 text-sm leading-relaxed mb-5">
- {recipe.description || 'A classic Filipino dish with tender ingredients in a savory, tangy sauce.'}
+ {recipe.description || ''}
  </Text>
  
  <View className="flex-row items-center justify-between border-t border-orange-200 pt-4">
@@ -368,7 +370,7 @@ export default function CookModeScreen() {
  <Text className={`flex-1 text-base ${isChecked ? 'text-gray-500 line-through' : 'text-stone-800'}`}>
  {ri.ingredient?.name}
  </Text>
- <Text className="text-gray-500 text-sm ml-2">to taste</Text>
+ 
  </TouchableOpacity>
  );
  })}

@@ -10,7 +10,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
 
-  const dbName = 'food_scanner_v2.db';
+  const dbName = 'food_scanner_v9.db';
   const dbDir = FileSystem.documentDirectory;
   const dbPath = `${dbDir}/${dbName}`.replace('//', '/');
   
@@ -23,7 +23,7 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
     
     // Only copy if it does not exist (or if we intentionally want to overwrite)
     if (!dbInfo.exists) {
-      const asset = Asset.fromModule(require('../../assets/app_v4.db'));
+      const asset = Asset.fromModule(require('../../assets/app_v6.db'));
       try { await asset.downloadAsync(); } catch(e) {}
       
       if (asset.localUri) {

@@ -8,7 +8,7 @@ export default function TermsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        router.navigate('/help');
+        router.canGoBack() ? router.back() : router.replace('/help');
         return true;
       };
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -17,7 +17,7 @@ export default function TermsScreen() {
   );
 
   const handleBack = () => {
-    router.navigate('/help');
+    router.canGoBack() ? router.back() : router.replace('/help');
   };
 
   return (

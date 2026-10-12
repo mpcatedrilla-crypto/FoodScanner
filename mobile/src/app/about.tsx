@@ -9,7 +9,7 @@ export default function AboutScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        router.navigate('/help');
+        router.canGoBack() ? router.back() : router.replace('/help');
         return true;
       };
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -18,7 +18,7 @@ export default function AboutScreen() {
   );
 
   const handleBack = () => {
-    router.navigate('/help');
+    router.canGoBack() ? router.back() : router.replace('/help');
   };
 
   return (

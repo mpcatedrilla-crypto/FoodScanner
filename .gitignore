@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Android / iOS builds & packages
+*.apk
+*.aab
+*.idsig
+*.ap_
+*.dex
+mobile/android/
+mobile/ios/
+
+# Bundles & temp patch files
+*.bundle
+*.hbc
+app_v6_fixed.db
+
+# ML Weights & large models
+*.pt
+*.onnx
+
+# Environment & credentials
+.env
+.env*.local
+*.keystore
+*.jks
+.agents/
+
+# Logs & temp
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+Thumbs.db

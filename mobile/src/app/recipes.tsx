@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, TextInput, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Clock, Search } from 'lucide-react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { getRecipes } from '../lib/actions';
 import type { Recipe } from '../lib/types';
@@ -16,6 +16,17 @@ export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        router.navigate('/');
+        return true;
+      };
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => sub.remove();
+    }, [])
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -41,7 +52,7 @@ export default function RecipesScreen() {
       {/* Header */}
       <View className="flex-row items-center px-6 py-4 border-b border-orange-100">
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.navigate('/')}
           className="mr-4 w-10 h-10 rounded-full bg-orange-100 items-center justify-center"
           activeOpacity={0.7}
         >
