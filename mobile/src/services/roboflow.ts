@@ -15,12 +15,12 @@ export interface RoboflowPrediction {
 }
 
 const CLASS_NAMES = [
-  'Lumpia Wrapper', 'ampalaya', 'banana', 'banana heart', 'bangus', 'bay leaf', 'bean sprout', 'beef', 'bell pepper', 
-  'bottle gourd', 'broccoli', 'cabbage', 'calamansi', 'carrot', 'cassava', 'cauliflower', 'chicken', 'chili', 'coconut', 
-  'corn', 'crab', 'cucumber', 'egg', 'eggplant', 'garlic', 'ginger', 'glass noodles', 'hotdog', 'kalabasa', 'kangkong', 
-  'langka', 'malunggay', 'misua noodle', 'monggo', 'mushroom', 'napa cabbage', 'okra', 'onion', 'patola', 'pea', 'pechay', 
-  'pineapple', 'pork', 'pork liver', 'potato', 'quail egg', 'radish', 'rice', 'sayote', 'scallion', 'shrimp', 'sitaw', 
-  'squid', 'taro', 'tilapia', 'tofu', 'tomato', 'tuna'
+  'banana_heart', 'bangus', 'bay_leaf', 'bean_sprout', 'beef', 'bell_pepper', 'bitter_gourd', 'bottle_gourd', 'broccoli', 
+  'cabbage', 'calamansi', 'carrot', 'cassava', 'cauliflower', 'chicken', 'chili', 'coconut', 'corn', 'crab', 'cucumber', 
+  'egg', 'eggplant', 'garlic', 'ginger', 'hotdog', 'jackfruit', 'malunggay', 'misua_noodle', 'monggo', 'mushroom', 
+  'napa_cabbage', 'okra', 'onion', 'patola', 'pea', 'pechay', 'pineapple', 'pork', 'pork_liver', 'potato', 'pumpkin', 
+  'quail_egg', 'radish', 'saging_saba', 'salmon', 'sayote', 'scallion', 'shrimp', 'sitaw', 'squid', 'tamarind', 'taro', 
+  'tilapia', 'tofu', 'tomato', 'tuna', 'water_spinach', 'white_rice'
 ];
 
 let session: InferenceSession | null = null;
@@ -125,7 +125,7 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
       }
     }
     
-    const threshold = 0.25;
+    const threshold = 0.45;
     const iouThreshold = 0.45;
     
     const candidates: number[][] = [];
