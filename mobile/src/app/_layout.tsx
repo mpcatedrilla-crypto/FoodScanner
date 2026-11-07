@@ -110,13 +110,10 @@ export default function TabLayout() {
           />
 
           {/* Hidden routes */}
-          <Tabs.Screen name="history" options={{ href: null, tabBarStyle: { display: 'none' } }} />
           <Tabs.Screen name="recipes" options={{ href: null, tabBarStyle: { display: 'none' } }} />
           <Tabs.Screen name="recipe/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
           <Tabs.Screen name="about" options={{ href: null, tabBarStyle: { display: 'none' } }} />
           <Tabs.Screen name="terms" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-          <Tabs.Screen name="tutorial" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-          <Tabs.Screen name="saved" options={{ href: null, tabBarStyle: { display: 'none' } }} />
         </Tabs>
       </GestureHandlerRootView>
     </>
