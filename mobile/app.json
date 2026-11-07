@@ -29,6 +29,8 @@
     "plugins": [
       "expo-router",
       "expo-camera",
+      "onnxruntime-react-native",
+      "./plugins/with-onnxruntime-package",
       [
         "expo-splash-screen",
         {

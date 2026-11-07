@@ -46,4 +46,5 @@ example
 venv312/
 venv/
 *.onnx
+!assets/best-2026-11-02.onnx
 *.pt
