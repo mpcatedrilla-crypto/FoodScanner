@@ -1,18 +1,14 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, BackHandler, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Search, BookOpen, Users, Award } from 'lucide-react-native';
+import { ChevronLeft, Camera, Search, BookOpen, Users, Award, ChevronRight } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
 
 export default function HelpScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        if (router.canGoBack()) {
-          router.back();
-        } else {
-          router.replace('/');
-        }
+        router.navigate('/');
         return true;
       };
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -21,93 +17,215 @@ export default function HelpScreen() {
   );
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
+    router.navigate('/');
   };
 
+  const steps = [
+    {
+      icon: Camera,
+      title: '1. Scan Ingredients',
+      desc: 'Open Scan in the bottom bar and point your camera at raw food ingredients.',
+    },
+    {
+      icon: Search,
+      title: '2. Review Detected Ingredients',
+      desc: 'Check detected ingredients, estimated per-100g nutrition, and total macro balance with the doughnut chart.',
+    },
+    {
+      icon: BookOpen,
+      title: '3. Suggested Recipes & Ingredients',
+      desc: 'Tap Suggested Recipes to discover matched Filipino dishes and check off ingredients as you prepare.',
+    },
+    {
+      icon: Award,
+      title: '4. Estimated DOST Nutritional Facts',
+      desc: 'View estimated per-serving calories, protein, carbs, and fat referenced from the FNRI-DOST database.',
+      link: 'https://i.fnri.dost.gov.ph/fct/library/starting_pg',
+    },
+  ];
+
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-[#FFF9F2]">
-      {/* Header */}
-      <View className="flex-row items-center px-6 py-4 border-b border-orange-200/40">
-        <TouchableOpacity onPress={handleBack} className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center mr-4">
-          <ArrowLeft size={20} color="#ea580c" />
+    <SafeAreaView edges={['top']} style={styles.page}>
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={handleBack} style={styles.iconAction} activeOpacity={0.75}>
+          <ChevronLeft size={20} color="#303440" />
         </TouchableOpacity>
-        <Text className="text-gray-900 text-xl font-bold">Help & Tutorial</Text>
+        <Text style={styles.screenTitle}>Help & Guide</Text>
+        <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6 pb-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }} scrollEnabled={false}>
-        <Text className="text-gray-900 text-2xl font-bold mb-2">How to use FoodScanner</Text>
-        <Text className="text-gray-600 mb-8">Follow this quick guide to master the app and start cooking!</Text>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.kicker}>A QUICK GUIDE</Text>
+        <Text style={styles.heading}>How Palayok works</Text>
+        <Text style={styles.lead}>
+          Follow this quick guide to scan ingredients, view nutrition estimates, and cook Filipino dishes.
+        </Text>
 
-        {/* Step 1 */}
-        <View className="flex-row mb-8">
-          <View className="w-12 h-12 bg-[#ea580c]/10 rounded-full items-center justify-center mr-4 mt-1 border border-[#ea580c]/20">
-            <Camera size={24} color="#ea580c" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold mb-1">1. Scan Ingredients</Text>
-            <Text className="text-gray-600 text-sm leading-5">Go to the 'Scan' tab. Point your camera at raw ingredients (e.g. pork, onions). The offline AI will automatically draw bounding boxes. Press capture to lock them in.</Text>
-          </View>
+        <View style={styles.stepList}>
+          {steps.map((s) => (
+            <View key={s.title} style={styles.stepCard}>
+              <View style={styles.iconBadge}>
+                <s.icon size={20} color="#ed5108" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.stepTitle}>{s.title}</Text>
+                <Text style={styles.stepDesc}>{s.desc}</Text>
+                {'link' in s && s.link ? (
+                  <Text style={styles.stepLink} onPress={() => Linking.openURL(s.link!)}>
+                    Visit FNRI-DOST Food Composition Table ›
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ))}
         </View>
 
-        {/* Step 2 */}
-        <View className="flex-row mb-8">
-          <View className="w-12 h-12 bg-[#ea580c]/10 rounded-full items-center justify-center mr-4 mt-1 border border-[#ea580c]/20">
-            <Search size={24} color="#ea580c" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold mb-1">2. Find Matching Recipes</Text>
-            <Text className="text-gray-600 text-sm leading-5">If an ingredient was missed, tap '+ Add Scanned Ingredient Manually'. Tap 'FIND MATCHING RECIPES' to discover authentic Filipino dishes matched offline.</Text>
-          </View>
-        </View>
-
-        {/* Step 3 */}
-        <View className="flex-row mb-8">
-          <View className="w-12 h-12 bg-[#ea580c]/10 rounded-full items-center justify-center mr-4 mt-1 border border-[#ea580c]/20">
-            <BookOpen size={24} color="#ea580c" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold mb-1">3. Enter Cook Mode</Text>
-            <Text className="text-gray-600 text-sm leading-5">Tap a recipe to view details. Follow step-by-step cooking instructions with interactive timers that alert you when each phase is complete.</Text>
-          </View>
-        </View>
-
-        {/* Step 4 (Nutrition & History - Bookmarks removed) */}
-        <View className="flex-row mb-8">
-          <View className="w-12 h-12 bg-[#ea580c]/10 rounded-full items-center justify-center mr-4 mt-1 border border-[#ea580c]/20">
-            <Award size={24} color="#ea580c" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold mb-1">4. DOST Nutritional Facts</Text>
-            <Text className="text-gray-600 text-sm leading-5">View accurate nutritional data (calories, protein, carbs, and fats per serving) referenced directly from the FNRI-DOST Philippine food database.</Text>
-          </View>
-        </View>
-
-        {/* About Us Link */}
         <TouchableOpacity
           onPress={() => router.push('/about')}
-          className="bg-white rounded-2xl p-4 flex-row items-center border border-orange-200/50 shadow-sm mb-3"
+          style={styles.linkCard}
+          activeOpacity={0.8}
         >
-          <View className="w-10 h-10 rounded-full bg-[#ea580c]/10 items-center justify-center mr-4">
-            <Users size={20} color="#ea580c" />
+          <View style={styles.linkIconBadge}>
+            <Users size={18} color="#ed5108" />
           </View>
-          <Text className="flex-1 text-gray-900 font-semibold">About Us</Text>
+          <Text style={styles.linkText}>About Us</Text>
+          <ChevronRight size={18} color="#ed5108" />
         </TouchableOpacity>
 
-        {/* Terms Link */}
         <TouchableOpacity
           onPress={() => router.push('/terms')}
-          className="bg-white rounded-2xl p-4 flex-row items-center border border-orange-200/50 shadow-sm mb-8"
+          style={styles.linkCard}
+          activeOpacity={0.8}
         >
-          <View className="w-10 h-10 rounded-full bg-[#ea580c]/10 items-center justify-center mr-4">
-            <BookOpen size={20} color="#ea580c" />
+          <View style={styles.linkIconBadge}>
+            <BookOpen size={18} color="#ed5108" />
           </View>
-          <Text className="flex-1 text-gray-900 font-semibold">Terms of Service</Text>
+          <Text style={styles.linkText}>Terms of Service</Text>
+          <ChevronRight size={18} color="#ed5108" />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: '#fffaf4',
+  },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  iconAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ecdfd4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  screenTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#303440',
+  },
+  scrollContent: {
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
+  kicker: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: '#ed5108',
+    marginBottom: 4,
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#303440',
+    marginBottom: 6,
+  },
+  lead: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#696c77',
+    marginBottom: 16,
+  },
+  stepList: {
+    gap: 10,
+    marginBottom: 18,
+  },
+  stepCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f1e6dd',
+    padding: 13,
+    gap: 12,
+  },
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: '#fff0e6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#303440',
+    marginBottom: 3,
+  },
+  stepDesc: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: '#737682',
+  },
+  stepLink: {
+    marginTop: 6,
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#ed5108',
+    textDecorationLine: 'underline',
+  },
+  linkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f1e6dd',
+    padding: 13,
+    marginBottom: 10,
+    gap: 12,
+  },
+  linkIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#fff0e6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#303440',
+  },
+});

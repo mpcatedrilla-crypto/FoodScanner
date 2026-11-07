@@ -1,52 +1,201 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import { Image } from 'expo-image';
-import { Camera, Search, CookingPot } from 'lucide-react-native';
-
-const { width } = Dimensions.get('window');
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { Check } from 'lucide-react-native';
 
 interface OnboardingProps {
-  onComplete: () => void;
+  onComplete: (dontShowAgain: boolean) => void;
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  const steps = [
+    {
+      num: '1',
+      title: '1. Scan ingredients',
+      desc: 'Use Scan in the bottom bar to point your camera at raw food ingredients.',
+    },
+    {
+      num: '2',
+      title: '2. Review ingredients',
+      desc: 'Check detected ingredients and estimated nutrition on the results screen.',
+    },
+    {
+      num: '3',
+      title: '3. Pick a recipe',
+      desc: 'Open suggested Filipino dishes and check off ingredients as you prepare.',
+    },
+  ];
+
   return (
-    <View className="absolute inset-0 z-50 bg-background">
-      <View className="flex-1 items-center pt-24 px-8">
-        <View className="w-full h-[300px] bg-orange-50 rounded-[40px] items-center justify-center mb-12 shadow-sm border border-[#ea580c]/10 overflow-hidden">
-            <Image 
-              source="https://images.unsplash.com/photo-1556909211-36987daf1b95?q=80&w=1000&auto=format&fit=crop" 
-              className="absolute inset-0 w-full h-full opacity-30"
-              contentFit="cover"
-            />
-            <View className="flex-row gap-6">
-                <View className="w-16 h-16 rounded-2xl bg-white shadow-xl items-center justify-center -rotate-12">
-                  <Camera size={28} color="#ea580c" />
+    <Modal visible={true} transparent animationType="fade" statusBarTranslucent>
+      <View style={styles.backdrop}>
+        <View style={styles.dialog}>
+          <Text style={styles.kicker}>A QUICK GUIDE</Text>
+          <Text style={styles.title}>How Palayok works</Text>
+          <Text style={styles.lead}>
+            Scan ingredients, view nutrition estimates, and find recipes in three quick steps.
+          </Text>
+
+          <View style={styles.stepsList}>
+            {steps.map((s) => (
+              <View key={s.num} style={styles.stepCard}>
+                <View style={styles.stepNumBadge}>
+                  <Text style={styles.stepNumText}>{s.num}</Text>
                 </View>
-                <View className="w-16 h-16 rounded-2xl bg-[#ea580c] shadow-xl items-center justify-center -translate-y-8">
-                  <Search size={28} color="white" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.stepTitle}>{s.title}</Text>
+                  <Text style={styles.stepDesc}>{s.desc}</Text>
                 </View>
-                <View className="w-16 h-16 rounded-2xl bg-white shadow-xl items-center justify-center rotate-12">
-                  <CookingPot size={28} color="#ea580c" />
-                </View>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={styles.optoutRow}
+            activeOpacity={0.75}
+            onPress={() => setDontShowAgain((prev) => !prev)}
+          >
+            <View style={[styles.checkbox, dontShowAgain && styles.checkboxChecked]}>
+              {dontShowAgain && <Check size={12} color="#ffffff" strokeWidth={3} />}
             </View>
+            <Text style={styles.optoutText}>Don’t show this again</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            activeOpacity={0.85}
+            onPress={() => onComplete(dontShowAgain)}
+          >
+            <Text style={styles.primaryBtnText}>Continue</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text className="text-3xl font-extrabold text-foreground text-center mb-4 leading-tight">
-          Turn Ingredients{'\n'}Into <Text className="text-[#ea580c]">Masterpieces</Text>
-        </Text>
-        
-        <Text className="text-lg text-muted-foreground text-center mb-12 px-4 leading-relaxed">
-          Simply scan whatever is in your fridge, and our AI will instantly suggest authentic Filipino recipes you can cook right now.
-        </Text>
-
-        <TouchableOpacity 
-          onPress={onComplete}
-          className="w-full bg-[#ea580c] py-4 rounded-2xl items-center shadow-lg shadow-[#ea580c]/30 mt-auto mb-12"
-        >
-          <Text className="text-white font-bold text-lg">Let's Get Cooking</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(29, 25, 22, 0.56)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  dialog: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#fffaf4',
+    borderRadius: 19,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#eadfd4',
+    shadowColor: '#1f1812',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.24,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  kicker: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+    color: '#ed5108',
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#303440',
+    marginBottom: 8,
+  },
+  lead: {
+    fontSize: 13.5,
+    lineHeight: 20,
+    color: '#696c77',
+    marginBottom: 14,
+  },
+  stepsList: {
+    gap: 10,
+    marginBottom: 14,
+  },
+  stepCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#efe4d9',
+    borderRadius: 14,
+    padding: 12,
+    gap: 11,
+  },
+  stepNumBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#fff0e6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumText: {
+    color: '#ed5108',
+    fontWeight: '900',
+    fontSize: 13,
+  },
+  stepTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#303440',
+    marginBottom: 3,
+  },
+  stepDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: '#737682',
+  },
+  optoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    marginBottom: 14,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#b7aba0',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#ed5108',
+    borderColor: '#ed5108',
+  },
+  optoutText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#5f626d',
+  },
+  primaryBtn: {
+    width: '100%',
+    backgroundColor: '#ed5108',
+    paddingVertical: 14,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#ed5108',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  primaryBtnText: {
+    color: '#ffffff',
+    fontSize: 14.5,
+    fontWeight: '800',
+  },
+});

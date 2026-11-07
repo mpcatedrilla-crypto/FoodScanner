@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
+import { RecipeImage } from './RecipeImage';
 import { Trash2 } from 'lucide-react-native';
 
 interface RecipeCardRowProps {
@@ -32,11 +32,7 @@ export function RecipeCardRow({
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Image
-        source={{ uri: recipe.image_url || 'https://placehold.co/600x400/ea580c/ffffff.png?text=Recipe' }}
-        style={{ width: 80, height: 80, margin: 12, borderRadius: 12 }}
-        contentFit="cover"
-      />
+      <RecipeImage recipe={recipe} style={{ width: 80, height: 80, margin: 12, borderRadius: 12 }} />
 
       <View className="flex-1 justify-center py-2 pr-2">
         <Text className="text-gray-900 text-[15px] font-bold uppercase tracking-wider mb-1" numberOfLines={1}>
@@ -47,7 +43,7 @@ export function RecipeCardRow({
             ⏱️ {dateText}
           </Text>
         ) : null}
-        {recipe.calories_per_serving ? (
+        {recipe.calories_per_serving != null ? (
           <Text className="text-gray-600 text-[11px]" numberOfLines={1}>
             {recipe.calories_per_serving} cal • {recipe.protein_per_serving}g pro • {recipe.carbs_per_serving}g carb • {recipe.fats_per_serving}g fat
           </Text>

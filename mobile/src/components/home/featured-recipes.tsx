@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Clock, ChefHat, ArrowRight } from 'lucide-react-native';
 import type { Recipe } from '../../lib/types';
-import { wikiImageMap } from '../../lib/image-map';
+import { RecipeImage } from '../RecipeImage';
 
 interface FeaturedRecipesProps {
   recipes: Recipe[];
@@ -40,11 +39,7 @@ export function FeaturedRecipes({ recipes }: FeaturedRecipesProps) {
             <TouchableOpacity className="flex-row gap-3 p-2 rounded-2xl bg-card border border-border/50 active:bg-primary/5">
               {/* Image */}
               <View className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-muted">
-                <Image
-                  source={{ uri: recipe.image_url || wikiImageMap[recipe.name] || 'https://placehold.co/600x400/ea580c/ffffff.png?text=Recipe' }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                />
+                <RecipeImage recipe={recipe} style={{ width: '100%', height: '100%' }} />
               </View>
 
               {/* Content */}

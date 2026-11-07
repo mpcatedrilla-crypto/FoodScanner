@@ -19,6 +19,7 @@ app_v6_fixed.db
 # ML Weights & large models
 *.pt
 *.onnx
+!mobile/assets/best-2026-11-02.onnx
 
 # Environment & credentials
 .env

@@ -15,13 +15,40 @@ export interface RoboflowPrediction {
 }
 
 const CLASS_NAMES = [
-  'banana_heart', 'bangus', 'bay_leaf', 'bean_sprout', 'beef', 'bell_pepper', 'bitter_gourd', 'bottle_gourd', 'broccoli', 
-  'cabbage', 'calamansi', 'carrot', 'cassava', 'cauliflower', 'chicken', 'chili', 'coconut', 'corn', 'crab', 'cucumber', 
-  'egg', 'eggplant', 'garlic', 'ginger', 'hotdog', 'jackfruit', 'malunggay', 'misua_noodle', 'monggo', 'mushroom', 
-  'napa_cabbage', 'okra', 'onion', 'patola', 'pea', 'pechay', 'pineapple', 'pork', 'pork_liver', 'potato', 'pumpkin', 
-  'quail_egg', 'radish', 'saging_saba', 'salmon', 'sayote', 'scallion', 'shrimp', 'sitaw', 'squid', 'tamarind', 'taro', 
-  'tilapia', 'tofu', 'tomato', 'tuna', 'water_spinach', 'white_rice'
+  'egg',
+  'beef',
+  'bell_pepper',
+  'carrot',
+  'chicken',
+  'eggplant',
+  'garlic',
+  'ginger',
+  'onion',
+  'pork',
+  'potato',
+  'sayote',
+  'tilapia',
+  'tomato',
+  'water_spinach',
 ];
+
+export const SUPPORTED_CLASSES = new Set([
+  'beef',
+  'bell_pepper',
+  'carrot',
+  'chicken',
+  'egg',
+  'eggplant',
+  'garlic',
+  'ginger',
+  'onion',
+  'pork',
+  'potato',
+  'sayote',
+  'tomato',
+  'water_spinach',
+  'tilapia',
+]);
 
 let session: InferenceSession | null = null;
 
@@ -36,12 +63,12 @@ async function logDebug(msg: string) {
 async function loadModel() {
   if (session) return session;
   
-  const modelName = 'best.onnx';
+  const modelName = 'best-2026-11-02.onnx';
   const modelPath = `${FileSystem.documentDirectory}${modelName}`;
   const modelInfo = await FileSystem.getInfoAsync(modelPath);
   
   if (!modelInfo.exists) {
-    const asset = Asset.fromModule(require('../../assets/best.onnx'));
+    const asset = Asset.fromModule(require('../../assets/best-2026-11-02.onnx'));
     await asset.downloadAsync();
     await FileSystem.copyAsync({
       from: asset.localUri || asset.uri,
@@ -69,7 +96,13 @@ function iou(boxA: number[], boxB: number[]): number {
   return interArea / (boxAArea + boxBArea - interArea);
 }
 
-export async function detectIngredients(base64Image: string): Promise<{ predictions: RoboflowPrediction[] } | null> {
+export async function detectIngredients(base64Image: string): Promise<{
+  predictions: RoboflowPrediction[];
+  imageWidth?: number;
+  imageHeight?: number;
+} | null> {
+  let imageWidth: number | undefined;
+  let imageHeight: number | undefined;
   try {
     await logDebug("detectIngredients called");
     const sess = await loadModel();
@@ -78,22 +111,31 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
     // Decode base64 JPEG
     const rawImageData = new Uint8Array(decode(base64Image));
     const image = jpeg.decode(rawImageData, { useTArray: true });
+    imageWidth = image.width;
+    imageHeight = image.height;
     await logDebug(`Decoded image: ${image.width}x${image.height}`);
     
     const width = 640;
     const height = 640;
     const numPixels = width * height;
-    
-    // Normalized to 0.0-1.0
+    const scale = Math.min(width / image.width, height / image.height);
+    const resizedWidth = Math.round(image.width * scale);
+    const resizedHeight = Math.round(image.height * scale);
+    const padLeft = Math.floor((width - resizedWidth) / 2);
+    const padTop = Math.floor((height - resizedHeight) / 2);
+
     const float32Data = new Float32Array(3 * numPixels);
-    for (let i = 0; i < numPixels; i++) {
-      const r = image.data[i * 4];
-      const g = image.data[i * 4 + 1];
-      const b = image.data[i * 4 + 2];
-      
-      float32Data[i] = r / 255.0; // R
-      float32Data[numPixels + i] = g / 255.0; // G
-      float32Data[2 * numPixels + i] = b / 255.0; // B
+    float32Data.fill(114 / 255);
+    for (let y = 0; y < resizedHeight; y++) {
+      const sourceY = Math.min(image.height - 1, Math.max(0, Math.floor((y + 0.5) * image.height / resizedHeight)));
+      for (let x = 0; x < resizedWidth; x++) {
+        const sourceX = Math.min(image.width - 1, Math.max(0, Math.floor((x + 0.5) * image.width / resizedWidth)));
+        const source = (sourceY * image.width + sourceX) * 4;
+        const target = (y + padTop) * width + x + padLeft;
+        float32Data[target] = image.data[source] / 255;
+        float32Data[numPixels + target] = image.data[source + 1] / 255;
+        float32Data[2 * numPixels + target] = image.data[source + 2] / 255;
+      }
     }
 
     const tensor = new Tensor('float32', float32Data, [1, 3, height, width]);
@@ -125,7 +167,7 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
       }
     }
     
-    const threshold = 0.45;
+    const threshold = 0.50;
     const iouThreshold = 0.45;
     
     const candidates: number[][] = [];
@@ -148,7 +190,7 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
       
       if (maxConf > maxConfOverall) maxConfOverall = maxConf;
       
-      if (maxConf > threshold) {
+      if (maxConf > threshold && SUPPORTED_CLASSES.has(CLASS_NAMES[maxClassIdx])) {
         const x_c = isTransposed ? outputData[ a * numFeatures + 0 ] : outputData[ 0 * numAnchors + a ];
         const y_c = isTransposed ? outputData[ a * numFeatures + 1 ] : outputData[ 1 * numAnchors + a ];
         const w   = isTransposed ? outputData[ a * numFeatures + 2 ] : outputData[ 2 * numAnchors + a ];
@@ -180,10 +222,10 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
         id: Math.random().toString(36).substr(2, 9),
         class: CLASS_NAMES[classIdx],
         confidence: boxA[4],
-        x: (boxA[0] + boxA[2]) / 2.0, // x_center
-        y: (boxA[1] + boxA[3]) / 2.0, // y_center
-        width: boxA[2] - boxA[0],
-        height: boxA[3] - boxA[1],
+        x: ((boxA[0] + boxA[2]) / 2 - padLeft) / scale,
+        y: ((boxA[1] + boxA[3]) / 2 - padTop) / scale,
+        width: (boxA[2] - boxA[0]) / scale,
+        height: (boxA[3] - boxA[1]) / scale,
       });
       
       for (let j = i + 1; j < candidates.length; j++) {
@@ -195,10 +237,10 @@ export async function detectIngredients(base64Image: string): Promise<{ predicti
       }
     }
 
-    return { predictions };
+    return { predictions, imageWidth: image.width, imageHeight: image.height };
   } catch (error) {
     console.error("ONNX Inference Error:", error);
     await logDebug(`ONNX Inference Error: ${error}`);
-    return { predictions: [] };
+    return { predictions: [], imageWidth, imageHeight };
   }
 }

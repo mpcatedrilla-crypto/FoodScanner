@@ -1,12 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, TextInput, BackHandler } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+  BackHandler,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, Search } from 'lucide-react-native';
+import { ChevronLeft, Home, Search, ChevronRight } from 'lucide-react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Image } from 'expo-image';
+import { RecipeImage } from '../components/RecipeImage';
 import { getRecipes } from '../lib/actions';
 import type { Recipe } from '../lib/types';
-import { RecipeImages } from '../lib/imageMap';
 
 export default function RecipesScreen() {
   const params = useLocalSearchParams<{ category?: string | string[]; title?: string | string[] }>();
@@ -17,13 +25,14 @@ export default function RecipesScreen() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const handleBack = () => {
+    router.navigate('/');
+    return true;
+  };
+
   useFocusEffect(
     React.useCallback(() => {
-      const onBackPress = () => {
-        router.navigate('/');
-        return true;
-      };
-      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
       return () => sub.remove();
     }, [])
   );
@@ -41,107 +50,94 @@ export default function RecipesScreen() {
       });
   }, [categoryParam]);
 
-  const displayTitle = titleParam
-    ? titleParam.toUpperCase()
-    : categoryParam
-      ? categoryParam.replace('|', '/').toUpperCase()
-      : 'ALL RECIPES';
+  const headingTitle = titleParam ? `${titleParam} recipes` : 'Filipino favorites';
+
+  const filteredRecipes = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return recipes;
+    return recipes.filter(
+      (r) =>
+        (r.name || '').toLowerCase().includes(q) ||
+        (r.name_tagalog || '').toLowerCase().includes(q)
+    );
+  }, [recipes, searchQuery]);
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-[#FFF9F2]">
-      {/* Header */}
-      <View className="flex-row items-center px-6 py-4 border-b border-orange-100">
+    <SafeAreaView edges={['top']} style={styles.page}>
+      {/* Topbar matching recipes.html */}
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={handleBack} style={styles.iconAction} activeOpacity={0.75}>
+          <ChevronLeft size={20} color="#303440" />
+        </TouchableOpacity>
+        <Text style={styles.screenTitle}>Recipes</Text>
         <TouchableOpacity
           onPress={() => router.navigate('/')}
-          className="mr-4 w-10 h-10 rounded-full bg-orange-100 items-center justify-center"
-          activeOpacity={0.7}
+          style={styles.iconAction}
+          activeOpacity={0.75}
         >
-          <ArrowLeft size={22} color="#ea580c" />
+          <Home size={18} color="#303440" />
         </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-stone-900 text-xl font-extrabold uppercase tracking-wider" numberOfLines={1}>
-            {displayTitle}
-          </Text>
-          <Text className="text-stone-500 text-xs mt-0.5">
-            {loading ? 'Searching...' : `${recipes.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()) || (r.name_tagalog && r.name_tagalog.toLowerCase().includes(searchQuery.toLowerCase()))).length} recipes available`}
-          </Text>
-        </View>
       </View>
 
-      {/* Search Bar */}
-      <View className="px-6 py-3 border-b border-orange-50 bg-white">
-        <View className="flex-row items-center bg-stone-100 rounded-xl px-4 py-3">
-          <Search size={18} color="#9ca3af" />
+      <View style={styles.headerBlock}>
+        <Text style={styles.pageHeading}>{headingTitle}</Text>
+        <Text style={styles.pageSubtitle}>
+          Tap a dish to view its ingredients and estimated nutrition.
+        </Text>
+
+        {/* Search Input */}
+        <View style={styles.searchBox}>
+          <Search size={17} color="#8c8e98" />
           <TextInput
-            className="flex-1 ml-3 text-base text-stone-800"
-            placeholder="Search for a recipe..."
-            placeholderTextColor="#9ca3af"
+            style={styles.searchInput}
+            placeholder="Search recipes"
+            placeholderTextColor="#9a9ca6"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
       </View>
 
-      {/* Content */}
       {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#ea580c" />
-          <Text className="text-stone-500 text-sm mt-3 font-medium">Loading recipes...</Text>
+        <View style={styles.centerBox}>
+          <ActivityIndicator size="large" color="#ed5108" />
+          <Text style={styles.loadingText}>Loading recipes...</Text>
         </View>
-      ) : recipes.length === 0 ? (
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-stone-800 text-lg font-bold text-center">No recipes found</Text>
-          <Text className="text-stone-500 text-sm text-center mt-1">
-            No recipes matching "{displayTitle.toLowerCase()}" are currently available.
-          </Text>
+      ) : filteredRecipes.length === 0 ? (
+        <View style={styles.centerBox}>
+          <Text style={styles.emptyTitle}>No matching recipes found.</Text>
+          <Text style={styles.emptySub}>Try another keyword or browse all Filipino dishes.</Text>
         </View>
       ) : (
         <FlatList
-          data={recipes.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()) || (r.name_tagalog && r.name_tagalog.toLowerCase().includes(searchQuery.toLowerCase())))}
+          data={filteredRecipes}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 40, paddingTop: 12 }}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => router.push((`/recipe/${item.id}?from=recipes`) as any)}
-              className="bg-white rounded-2xl mb-3 flex-row items-center border border-orange-100 p-3 shadow-sm mx-4"
-              activeOpacity={0.8}
+              onPress={() =>
+                router.push({
+                  pathname: '/recipe/[id]',
+                  params: {
+                    id: item.id,
+                    from: 'recipes',
+                    ...(categoryParam ? { category: categoryParam } : {}),
+                    ...(titleParam ? { title: titleParam } : {}),
+                  },
+                })
+              }
+              style={styles.recipeCard}
+              activeOpacity={0.84}
             >
-              <Image
-                source={RecipeImages[item.id] || require('../../assets/images/hero-food.jpg')}
-                style={{ width: 84, height: 84, borderRadius: 12 }}
-                contentFit="cover"
-              />
-              <View className="flex-1 ml-3 justify-center">
-                <Text className="text-stone-900 text-base font-bold" numberOfLines={1}>
+              <RecipeImage recipe={item} style={styles.recipePhoto} />
+              <View style={styles.recipeCardBody}>
+                <Text style={styles.recipeCardTitle} numberOfLines={2}>
                   {item.name}
                 </Text>
-                {item.cooking_time_minutes ? (
-                  <View className="flex-row items-center mt-0.5">
-                    <Clock size={12} color="#ea580c" />
-                    <Text className="text-stone-500 text-xs ml-1">
-                      {item.cooking_time_minutes} min
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* DOST Nutritional Facts */}
-                <View className="mt-2 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-                  <View className="bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
-                    <Text className="text-[#ea580c] text-[11px] font-bold">
-                      {item.calories_per_serving ?? 0} cal
-                    </Text>
-                  </View>
-                  <View className="bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">
-                      <Text className="text-stone-600 text-[11px] font-medium">Protein: {item.protein_per_serving ?? 0}g</Text>
-                    </View>
-                    <View className="bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">
-                      <Text className="text-stone-600 text-[11px] font-medium">Carbs: {item.carbs_per_serving ?? 0}g</Text>
-                    </View>
-                    <View className="bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">
-                      <Text className="text-stone-600 text-[11px] font-medium">Fats: {item.fats_per_serving ?? 0}g</Text>
-                    </View>
-                </View>
+                <ChevronRight size={16} color="#ed5108" />
               </View>
             </TouchableOpacity>
           )}
@@ -150,3 +146,140 @@ export default function RecipesScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: '#fffaf4',
+  },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  iconAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ecdfd4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#241910',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  screenTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#303440',
+  },
+  headerBlock: {
+    paddingHorizontal: 18,
+    paddingTop: 4,
+    paddingBottom: 6,
+  },
+  pageHeading: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#303440',
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    fontSize: 12.5,
+    color: '#858791',
+    marginBottom: 12,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#eadfd5',
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    marginBottom: 8,
+    shadowColor: '#251a12',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 9,
+    fontSize: 13.5,
+    color: '#303440',
+    paddingVertical: 0,
+  },
+  listContent: {
+    paddingHorizontal: 18,
+    paddingTop: 6,
+    paddingBottom: 36,
+  },
+  columnWrapper: {
+    gap: 12,
+    marginBottom: 12,
+  },
+  recipeCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f0e5dc',
+    overflow: 'hidden',
+    shadowColor: '#251a12',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  recipePhoto: {
+    width: '100%',
+    height: 104,
+  },
+  recipeCardBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  recipeCardTitle: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#303440',
+    lineHeight: 17,
+  },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#858791',
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#303440',
+    marginBottom: 4,
+  },
+  emptySub: {
+    fontSize: 12.5,
+    color: '#858791',
+    textAlign: 'center',
+  },
+});
