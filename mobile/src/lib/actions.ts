@@ -32,7 +32,7 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (dbPromise) return dbPromise;
 
   dbPromise = (async () => {
-    const dbName = 'food_scanner_v24.db';
+    const dbName = 'food_scanner_v25.db';
     const dbDir = FileSystem.documentDirectory;
     const dbPath = `${dbDir}/${dbName}`.replace('//', '/');
 
