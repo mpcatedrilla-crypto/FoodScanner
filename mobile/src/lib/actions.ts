@@ -1,3 +1,7 @@
+/**
+ * SQLite Database Access Layer
+ * Purpose: Manages local SQLite connection (app_v6.db), queries recipes, and retrieves ingredient mappings.
+ */
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as SQLite from 'expo-sqlite';

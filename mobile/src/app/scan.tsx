@@ -1,3 +1,7 @@
+/**
+ * Live Camera Scanner Screen
+ * Purpose: Handles camera feed, continuous YOLO inference, bounding box visualization, and ingredient accumulation.
+ */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   AppState,

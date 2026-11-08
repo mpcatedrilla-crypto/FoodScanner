@@ -1,3 +1,7 @@
+/**
+ * Nutritional Calculation Engine
+ * Purpose: Computes calories, carbs, protein, and fat based on DOST-FNRI references with Panlasang Pinoy fallbacks.
+ */
 import type { Ingredient, RecipeWithIngredients } from './types';
 import { getPanlasangPinoyNutrition } from './recipe-nutrition-data';
 

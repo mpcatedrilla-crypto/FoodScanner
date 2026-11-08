@@ -1,3 +1,7 @@
+/**
+ * Recipe Detail Screen
+ * Purpose: Displays recipe hero image, title, nutrition facts cards, and interactive ingredients checklist.
+ */
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,

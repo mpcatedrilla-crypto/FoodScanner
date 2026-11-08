@@ -1,3 +1,7 @@
+/**
+ * ONNX Runtime Inference Service
+ * Purpose: Loads YOLO ONNX model on-device and performs offline ingredient detection.
+ */
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system/legacy';

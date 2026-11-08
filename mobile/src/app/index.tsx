@@ -1,3 +1,7 @@
+/**
+ * Home Screen
+ * Purpose: Main dashboard with search bar, meal categories, featured dishes, and quick camera launch button.
+ */
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,

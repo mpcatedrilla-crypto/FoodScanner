@@ -1,3 +1,7 @@
+/**
+ * Recipe Matching Algorithm
+ * Purpose: Matches user detected ingredients against recipe database and computes match percentage score.
+ */
 import type { Ingredient, Recipe, RecipeMatch } from './types';
 
 export const RECIPE_MATCH_LIMIT = 5;
